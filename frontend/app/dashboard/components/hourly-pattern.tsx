@@ -4,14 +4,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton"
 import { BarChart } from "@tremor/react"
 import { useHourlyPattern } from "@/lib/hooks"
+import type { TimePeriod } from "@/types/analytics"
 
 interface HourlyPatternProps {
   startDate?: string;
   endDate?: string;
+  period?: TimePeriod;
 }
 
-export function HourlyPattern({ startDate, endDate }: HourlyPatternProps) {
-  const { data, loading, error } = useHourlyPattern(startDate, endDate)
+export function HourlyPattern({ startDate, endDate, period }: HourlyPatternProps) {
+  const { data, loading, error } = useHourlyPattern(startDate, endDate, period)
 
   if (loading) {
     return (
@@ -55,14 +57,14 @@ export function HourlyPattern({ startDate, endDate }: HourlyPatternProps) {
     .sort((a, b) => a.hour - b.hour)
     .map(item => ({
       hour: formatHour(item.hour),
-      "Total Hours": item.totalHours,
-      "Sessions": item.sessionCount,
+      "Hours": item.totalHours,
     }))
 
-  // Find peak hour
-  const peakHour = data.hourlyDistribution.reduce((prev, current) =>
-    current.totalHours > prev.totalHours ? current : prev
-  )
+  const peakHour = data.hourlyDistribution.length > 0
+    ? data.hourlyDistribution.reduce((prev, current) =>
+        current.totalHours > prev.totalHours ? current : prev
+      )
+    : null
 
   return (
     <Card>
@@ -87,12 +89,14 @@ export function HourlyPattern({ startDate, endDate }: HourlyPatternProps) {
             className="h-80"
             data={chartData}
             index="hour"
-            categories={["Total Hours"]}
-            colors={["blue"]}
+            categories={["Hours"]}
+            colors={["cyan"]}
             valueFormatter={(value) => `${value.toFixed(1)}h`}
-            showLegend={true}
+            showLegend={false}
             showGridLines={true}
             yAxisWidth={48}
+            showXAxis={true}
+            showYAxis={true}
           />
         )}
       </CardContent>

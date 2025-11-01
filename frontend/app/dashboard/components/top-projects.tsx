@@ -3,7 +3,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
-import { BarList } from "@tremor/react"
 import { useTopProjects } from "@/lib/hooks"
 import type { TimePeriod } from "@/types/analytics"
 
@@ -48,12 +47,6 @@ export function TopProjects({ limit = 5, period = 'month' }: TopProjectsProps) {
     )
   }
 
-  // Format data for BarList
-  const barListData = data.topProjects.map(project => ({
-    name: project.projectName,
-    value: project.totalHours,
-  }))
-
   const getMedalEmoji = (rank: number) => {
     switch (rank) {
       case 1: return '🥇'
@@ -87,19 +80,8 @@ export function TopProjects({ limit = 5, period = 'month' }: TopProjectsProps) {
             No project data available
           </div>
         ) : (
-          <div className="space-y-6">
-            {/* BarList visualization */}
-            <BarList
-              data={barListData}
-              valueFormatter={(value) => `${value.toFixed(1)}h`}
-              showAnimation={true}
-            />
-
-            {/* Detailed leaderboard */}
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium text-muted-foreground">Detailed Rankings</h4>
-              <div className="space-y-2">
-                {data.topProjects.map((project) => (
+          <div className="space-y-2">
+            {data.topProjects.map((project) => (
                   <div
                     key={project.rank}
                     className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
@@ -124,8 +106,6 @@ export function TopProjects({ limit = 5, period = 'month' }: TopProjectsProps) {
                     </div>
                   </div>
                 ))}
-              </div>
-            </div>
           </div>
         )}
       </CardContent>

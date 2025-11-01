@@ -30,7 +30,7 @@ export class TracksController {
     return await this.tracksService.getAllTasks(startDate, endDate);
   }
 
-  @Get('sync')
+  @Post('sync')
   async syncFromToggl(
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,

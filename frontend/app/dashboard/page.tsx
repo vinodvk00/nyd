@@ -9,6 +9,7 @@ import { HourlyPattern } from "./components/hourly-pattern"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { syncFromToggl } from "@/lib/api"
 import type { TimePeriod } from "@/types/analytics"
 
 export default function DashboardPage() {
@@ -18,11 +19,24 @@ export default function DashboardPage() {
   const handleSync = async () => {
     setSyncing(true)
     try {
-      // You can add sync functionality here
-      // await syncFromToggl()
-      alert('Sync functionality - coming soon!')
+      const result = await syncFromToggl()
+
+      const message = `Sync completed!\n\n` +
+        `Total entries: ${result.total}\n` +
+        `Created: ${result.created}\n` +
+        `Updated: ${result.updated}\n` +
+        `Skipped: ${result.skipped}` +
+        (result.errors && result.errors.length > 0
+          ? `\n\nWarning: ${result.errors.length} errors occurred`
+          : '')
+
+      alert(message)
+
+      // Refresh the page to show updated data
+      window.location.reload()
     } catch (error) {
       console.error('Sync failed:', error)
+      alert(`Sync failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setSyncing(false)
     }
@@ -66,19 +80,19 @@ export default function DashboardPage() {
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
           <div className="grid gap-6 lg:grid-cols-2">
-            <ActivityChart groupBy="day" />
+            <ActivityChart groupBy="day" period={period} />
             <TopProjects limit={5} period={period} />
           </div>
         </TabsContent>
 
         {/* Projects Tab */}
         <TabsContent value="projects" className="space-y-6">
-          <ProjectBreakdown />
+          <ProjectBreakdown period={period} />
         </TabsContent>
 
         {/* Patterns Tab */}
         <TabsContent value="patterns" className="space-y-6">
-          <HourlyPattern />
+          <HourlyPattern period={period} />
         </TabsContent>
       </Tabs>
     </div>

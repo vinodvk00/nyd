@@ -20,18 +20,21 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 /**
  * Base fetch wrapper with error handling
  */
-async function fetchApi<T>(endpoint: string): Promise<T> {
+async function fetchApi<T>(
+  endpoint: string,
+  options?: RequestInit
+): Promise<T> {
   const url = `${API_URL}${endpoint}`;
 
   try {
+    console.log('Fetching:', url);
 
-    console.log(API_URL);
-    
     const response = await fetch(url, {
       headers: {
         'Content-Type': 'application/json',
       },
       cache: 'no-store',
+      ...options,
     });
 
     if (!response.ok) {
@@ -165,23 +168,9 @@ export async function syncFromToggl(
   errors?: Array<{ entryId: any; error: string }>;
 }> {
   const query = buildQueryString({ startDate, endDate });
-  const url = `${API_URL}/tracks/sync${query}`;
-
-  const response = await fetch(url, {
+  return fetchApi(`/tracks/sync${query}`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
   });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({
-      message: 'Sync failed',
-    }));
-    throw new Error(errorData.message || 'Failed to sync from Toggl');
-  }
-
-  return response.json();
 }
 
 // ============================================================================

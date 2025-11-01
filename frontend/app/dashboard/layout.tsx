@@ -1,3 +1,5 @@
+import { ThemeToggle } from "@/components/theme-toggle"
+
 export default function DashboardLayout({
   children,
 }: {
@@ -14,6 +16,7 @@ export default function DashboardLayout({
                 Insights from your Toggl Track data
               </p>
             </div>
+            <ThemeToggle />
           </div>
         </div>
       </div>

@@ -4,16 +4,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton"
 import { AreaChart } from "@tremor/react"
 import { useActivityData } from "@/lib/hooks"
-import type { GroupBy } from "@/types/analytics"
+import type { GroupBy, TimePeriod } from "@/types/analytics"
+import { format, parseISO } from "date-fns"
 
 interface ActivityChartProps {
   startDate?: string;
   endDate?: string;
   groupBy?: GroupBy;
+  period?: TimePeriod;
 }
 
-export function ActivityChart({ startDate, endDate, groupBy = 'day' }: ActivityChartProps) {
-  const { data, loading, error } = useActivityData(startDate, endDate, groupBy)
+export function ActivityChart({ startDate, endDate, groupBy = 'day', period }: ActivityChartProps) {
+  const { data, loading, error } = useActivityData(startDate, endDate, groupBy, period)
 
   if (loading) {
     return (
@@ -44,10 +46,41 @@ export function ActivityChart({ startDate, endDate, groupBy = 'day' }: ActivityC
     )
   }
 
-  // Format data for Tremor chart
-  const chartData = data.data.map(item => ({
-    date: item.date,
-    "Total Hours": item.totalHours,
+  const formatDate = (dateString: string, groupBy: GroupBy, index: number, total: number) => {
+    try {
+      const date = parseISO(dateString)
+
+      if (groupBy === 'day') {
+        if (index === 0) {
+          return format(date, 'MMM d')
+        } else if (index === total - 1) {
+          const firstDate = parseISO(data.data[0].date)
+          if (date.getMonth() === firstDate.getMonth()) {
+            return format(date, 'd')
+          } else {
+            return format(date, 'MMM d') 
+          }
+        } else {
+          return format(date, 'd')
+        }
+      }
+
+      switch (groupBy) {
+        case 'week':
+          return format(date, 'MMM d')
+        case 'month':
+          return format(date, 'MMM yyyy')
+        default:
+          return format(date, 'd')
+      }
+    } catch {
+      return dateString
+    }
+  }
+
+  const chartData = data.data.map((item, index) => ({
+    date: formatDate(item.date, groupBy, index, data.data.length),
+    "Hours": item.totalHours,
     "Sessions": item.sessionCount,
   }))
 
@@ -78,12 +111,19 @@ export function ActivityChart({ startDate, endDate, groupBy = 'day' }: ActivityC
             className="h-80"
             data={chartData}
             index="date"
-            categories={["Total Hours"]}
-            colors={["blue"]}
+            categories={["Hours"]}
+            colors={["cyan"]}
             valueFormatter={(value) => `${value.toFixed(1)}h`}
-            showLegend={true}
+            showLegend={false}
             showGridLines={true}
+            showXAxis={true}
+            showYAxis={true}
+            yAxisWidth={56}
             curveType="monotone"
+            autoMinValue={false}
+            minValue={0}
+            allowDecimals={true}
+            connectNulls={true}
           />
         )}
       </CardContent>
