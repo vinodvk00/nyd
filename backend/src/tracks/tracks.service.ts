@@ -53,42 +53,86 @@ export class TracksService {
   }
 
   async getAllTasks(startDate?: string, endDate?: string) {
+    let url = `${this.togglApiUrl}/me/time_entries`;
     try {
-      let url = `${this.togglApiUrl}/me/time_entries`;
       const params = new URLSearchParams();
 
+      const now = new Date();
+      let end = endDate ? new Date(endDate) : now;
+      let start: Date;
+
       // Toggl API v9 limitation: can only fetch data from last 3 months
-      const end = endDate ? new Date(endDate) : new Date();
-      const threeMonthsAgo = new Date();
+      const threeMonthsAgo = new Date(now);
       threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
       threeMonthsAgo.setDate(threeMonthsAgo.getDate() + 1); // Add 1 day to be safe
 
-      let start: Date;
       if (startDate) {
         start = new Date(startDate);
-        // Validate that start date is not older than 3 months
-        if (start < threeMonthsAgo) {
-          start = threeMonthsAgo;
-        }
       } else {
         // Default to 3 months back (API limit)
         start = threeMonthsAgo;
       }
 
-      startDate = start.toISOString().split('T')[0];
-      endDate = end.toISOString().split('T')[0];
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        throw new Error('Invalid date format. Please use YYYY-MM-DD format.');
+      }
 
-      if (startDate) params.append('start_date', startDate);
-      if (endDate) params.append('end_date', endDate);
+      if (start > end) {
+        throw new Error(`Start date (${start.toISOString().split('T')[0]}) cannot be after end date (${end.toISOString().split('T')[0]})`);
+      }
+
+      if (start < threeMonthsAgo) {
+        console.warn(
+          `Start date ${start.toISOString().split('T')[0]} is older than 3 months. Adjusting to ${threeMonthsAgo.toISOString().split('T')[0]}`
+        );
+        start = threeMonthsAgo;
+      }
+
+      if (start > end) {
+        throw new Error(
+          `The requested date range is outside the 3-month API limit. Please request dates from ${threeMonthsAgo.toISOString().split('T')[0]} onwards.`
+        );
+      }
+
+      const startDateStr = start.toISOString().split('T')[0];
+      const endDateStr = end.toISOString().split('T')[0];
+
+      if (startDateStr) params.append('start_date', startDateStr);
+      if (endDateStr) params.append('end_date', endDateStr);
 
       if (params.toString()) {
         url += `?${params.toString()}`;
       }
 
+      console.log('Requesting Toggl URL:', url);
       const response = await axios.get(url, this.getAxiosConfig());
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to fetch all tasks: ${error.message}`);
+      console.error('Toggl API Error Details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        url: url,
+      });
+
+      if (error.response?.status === 400) {
+        const togglMessage = typeof error.response.data === 'string'
+          ? error.response.data
+          : error.response.data?.message || 'Bad request';
+        throw new Error(`Toggl API Error: ${togglMessage}`);
+      } else if (error.response?.status === 401) {
+        throw new Error('Authentication failed. Please check your Toggl API token.');
+      } else if (error.response?.status === 403) {
+        throw new Error('Access forbidden. Please check your Toggl workspace permissions.');
+      } else if (error.response?.status === 429) {
+        throw new Error('Rate limit exceeded. Please try again later.');
+      } else if (error.response) {
+        throw new Error(`Toggl API returned error ${error.response.status}: ${error.response.data}`);
+      } else if (error.message) {
+        throw error; // Re-throw validation errors
+      } else {
+        throw new Error('Failed to connect to Toggl API. Please check your internet connection.');
+      }
     }
   }
 
@@ -155,29 +199,55 @@ export class TracksService {
       let url = `${this.togglApiUrl}/me/time_entries`;
       const params = new URLSearchParams();
 
-      const end = endDate ? new Date(endDate) : new Date();
-      const threeMonthsAgo = new Date();
-      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-      threeMonthsAgo.setDate(threeMonthsAgo.getDate() + 1); // Add 1 day to be safe
+      const now = new Date();
+      let end: Date;
+
+      if (endDate) {
+        end = new Date(endDate);
+      } else {
+        //note:  Add 1 day to include current day's entries
+        end = new Date(now);
+        end.setDate(end.getDate() + 1);
+      }
 
       let start: Date;
+
+      const threeMonthsAgo = new Date(now);
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+      threeMonthsAgo.setDate(threeMonthsAgo.getDate() + 1);
+
       if (startDate) {
         start = new Date(startDate);
-        if (start < threeMonthsAgo) {
-          console.warn(
-            `Requested start date ${startDate} is older than 3 months. Adjusting to ${threeMonthsAgo.toISOString().split('T')[0]}`,
-          );
-          start = threeMonthsAgo;
-        }
       } else {
         start = threeMonthsAgo;
       }
 
-      startDate = start.toISOString().split('T')[0];
-      endDate = end.toISOString().split('T')[0];
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        throw new Error('Invalid date format. Please use YYYY-MM-DD format.');
+      }
 
-      if (startDate) params.append('start_date', startDate);
-      if (endDate) params.append('end_date', endDate);
+      if (start > end) {
+        throw new Error(`Start date (${start.toISOString().split('T')[0]}) cannot be after end date (${end.toISOString().split('T')[0]})`);
+      }
+
+      if (start < threeMonthsAgo) {
+        console.warn(
+          `Start date ${start.toISOString().split('T')[0]} is older than 3 months. Adjusting to ${threeMonthsAgo.toISOString().split('T')[0]}`
+        );
+        start = threeMonthsAgo;
+      }
+
+      if (start > end) {
+        throw new Error(
+          `The requested date range is outside the 3-month API limit. Please request dates from ${threeMonthsAgo.toISOString().split('T')[0]} onwards.`
+        );
+      }
+
+      const startDateStr = start.toISOString().split('T')[0];
+      const endDateStr = end.toISOString().split('T')[0];
+
+      if (startDateStr) params.append('start_date', startDateStr);
+      if (endDateStr) params.append('end_date', endDateStr);
 
       if (params.toString()) {
         url += `?${params.toString()}`;
@@ -295,10 +365,10 @@ export class TracksService {
         updated,
         skipped,
         dateRange: {
-          startDate,
-          endDate,
+          startDate: startDateStr,
+          endDate: endDateStr,
         },
-        message: `Synced ${togglEntries.length} entries from ${startDate} to ${endDate}: ${created} created, ${updated} updated, ${skipped} skipped`,
+        message: `Synced ${togglEntries.length} entries from ${startDateStr} to ${endDateStr}: ${created} created, ${updated} updated, ${skipped} skipped`,
       };
 
       if (errors.length > 0) {
@@ -312,7 +382,25 @@ export class TracksService {
       if (error.response) {
         console.error('Toggl API response error:', error.response.status, error.response.data);
       }
-      throw new Error(`Failed to sync from Toggl: ${error.message}`);
+
+      if (error.response?.status === 400) {
+        const togglMessage = typeof error.response.data === 'string'
+          ? error.response.data
+          : error.response.data?.message || 'Bad request';
+        throw new Error(`Toggl API Error: ${togglMessage}`);
+      } else if (error.response?.status === 401) {
+        throw new Error('Authentication failed. Please check your Toggl API token.');
+      } else if (error.response?.status === 403) {
+        throw new Error('Access forbidden. Please check your Toggl workspace permissions.');
+      } else if (error.response?.status === 429) {
+        throw new Error('Rate limit exceeded. Please try again later.');
+      } else if (error.response) {
+        throw new Error(`Toggl API returned error ${error.response.status}: ${error.response.data}`);
+      } else if (error.message) {
+        throw error; // Re-throw validation errors
+      } else {
+        throw new Error('Failed to connect to Toggl API. Please check your internet connection.');
+      }
     }
   }
 }

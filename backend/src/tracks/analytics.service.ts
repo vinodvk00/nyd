@@ -38,6 +38,7 @@ export class AnalyticsService {
     switch (period) {
       case TimePeriod.TODAY:
         startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999); // Set to end of today
         break;
       case TimePeriod.WEEK:
         startDate.setDate(startDate.getDate() - 7);
@@ -307,6 +308,7 @@ export class AnalyticsService {
       })
       .andWhere('track.projectId IS NOT NULL')
       .andWhere('project.id IS NOT NULL')
+      .andWhere('track.duration IS NOT NULL')
       .groupBy('project.id')
       .addGroupBy('project.name')
       .addGroupBy('track.projectId')
@@ -326,6 +328,7 @@ export class AnalyticsService {
           end: endDate,
         })
         .andWhere('track.projectName IS NOT NULL')
+        .andWhere('track.duration IS NOT NULL')
         .groupBy('track.projectId')
         .addGroupBy('track.projectName')
         .orderBy('SUM(track.duration)', 'DESC')

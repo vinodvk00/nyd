@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { SummaryCards } from "./components/summary-cards"
 import { ActivityChart } from "./components/activity-chart"
 import { ProjectBreakdown } from "./components/project-breakdown"
@@ -12,9 +13,92 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { syncFromToggl } from "@/lib/api"
 import type { TimePeriod } from "@/types/analytics"
 
-export default function DashboardPage() {
-  const [period, setPeriod] = useState<TimePeriod>('month')
+const VALID_PERIODS: TimePeriod[] = ['today', 'week', 'month', 'all']
+const VALID_TABS = ['overview', 'projects', 'patterns']
+
+function DashboardContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [isClient, setIsClient] = useState(false)
   const [syncing, setSyncing] = useState(false)
+
+  // Client-side hydration check
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  const getInitialPeriod = (): TimePeriod => {
+    const urlPeriod = searchParams.get('period') as TimePeriod
+    if (urlPeriod && VALID_PERIODS.includes(urlPeriod)) {
+      return urlPeriod
+    }
+
+    if (isClient) {
+      const savedPeriod = localStorage.getItem('lastPeriod') as TimePeriod
+      if (savedPeriod && VALID_PERIODS.includes(savedPeriod)) {
+        return savedPeriod
+      }
+    }
+
+    return 'month'
+  }
+
+  const getInitialTab = (): string => {
+    const urlTab = searchParams.get('tab')
+    if (urlTab && VALID_TABS.includes(urlTab)) {
+      return urlTab
+    }
+
+    if (isClient) {
+      const savedTab = localStorage.getItem('lastTab')
+      if (savedTab && VALID_TABS.includes(savedTab)) {
+        return savedTab
+      }
+    }
+
+    return 'overview'
+  }
+
+  const [period, setPeriod] = useState<TimePeriod>(getInitialPeriod())
+  const [activeTab, setActiveTab] = useState(getInitialTab())
+
+  useEffect(() => {
+    const urlPeriod = searchParams.get('period') as TimePeriod
+    if (urlPeriod && VALID_PERIODS.includes(urlPeriod) && urlPeriod !== period) {
+      setPeriod(urlPeriod)
+    }
+  }, [searchParams, period])
+
+  useEffect(() => {
+    const urlTab = searchParams.get('tab')
+    if (urlTab && VALID_TABS.includes(urlTab) && urlTab !== activeTab) {
+      setActiveTab(urlTab)
+    }
+  }, [searchParams, activeTab])
+
+  const handlePeriodChange = (newPeriod: TimePeriod) => {
+    setPeriod(newPeriod)
+
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('period', newPeriod)
+    router.push(`?${params.toString()}`, { scroll: false })
+
+    if (isClient) {
+      localStorage.setItem('lastPeriod', newPeriod)
+    }
+  }
+
+  const handleTabChange = (newTab: string) => {
+    setActiveTab(newTab)
+
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('tab', newTab)
+    router.push(`?${params.toString()}`, { scroll: false })
+
+    if (isClient) {
+      localStorage.setItem('lastTab', newTab)
+    }
+  }
 
   const handleSync = async () => {
     setSyncing(true)
@@ -48,7 +132,7 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-3">
           <div className="text-sm font-medium">Time Period:</div>
-          <Select value={period} onValueChange={(value) => setPeriod(value as TimePeriod)}>
+          <Select value={period} onValueChange={handlePeriodChange}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Select period" />
             </SelectTrigger>
@@ -70,7 +154,7 @@ export default function DashboardPage() {
       <SummaryCards period={period} />
 
       {/* Main Dashboard Tabs */}
-      <Tabs defaultValue="overview" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="projects">Projects</TabsTrigger>
@@ -96,5 +180,13 @@ export default function DashboardPage() {
         </TabsContent>
       </Tabs>
     </div>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div className="p-6">Loading...</div>}>
+      <DashboardContent />
+    </Suspense>
   )
 }
