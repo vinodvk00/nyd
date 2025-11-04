@@ -144,7 +144,9 @@ function DashboardContent() {
       </div>
 
       {/* Summary Statistics */}
-      <SummaryCards period={period} />
+      <div className="transition-all duration-300">
+        <SummaryCards period={period} />
+      </div>
 
       {/* Main Dashboard Tabs */}
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
@@ -154,8 +156,8 @@ function DashboardContent() {
           <TabsTrigger value="patterns">Patterns</TabsTrigger>
         </TabsList>
 
-        {/* Tab Content Container - Instant Switch (No Animation) */}
-        <div>
+        {/* Tab Content Container */}
+        <div className="transition-all duration-300">
           {/* Overview Tab - Always mounted */}
           <div className={`space-y-6 ${activeTab === 'overview' ? 'block' : 'hidden'}`}>
             <div className="grid gap-6 lg:grid-cols-2">

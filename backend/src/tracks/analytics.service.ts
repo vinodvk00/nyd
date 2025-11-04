@@ -76,6 +76,8 @@ export class AnalyticsService {
     if (start > end) {
       throw new Error('Start date must be before end date');
     }
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
 
     return { startDate: start, endDate: end };
   }
