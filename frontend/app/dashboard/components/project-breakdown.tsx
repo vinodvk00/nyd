@@ -29,12 +29,12 @@ export function ProjectBreakdown({
     period
   );
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <Card>
         <CardHeader>
           <Skeleton className="h-6 w-40" />
-          <Skeleton className="h-4 w-56 mt-2" />
+          <Skeleton className="h-4 w-56" />
         </CardHeader>
         <CardContent>
           <Skeleton className="h-80 w-full" />

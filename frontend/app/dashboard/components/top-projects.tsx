@@ -14,17 +14,17 @@ interface TopProjectsProps {
 export function TopProjects({ limit = 5, period = 'month' }: TopProjectsProps) {
   const { data, loading, error } = useTopProjects(limit, period)
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <Card>
         <CardHeader>
           <Skeleton className="h-6 w-32" />
-          <Skeleton className="h-4 w-48 mt-2" />
+          <Skeleton className="h-4 w-48" />
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-2">
             {[...Array(5)].map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full" />
+              <Skeleton key={i} className="h-16 w-full" />
             ))}
           </div>
         </CardContent>
@@ -87,7 +87,7 @@ export function TopProjects({ limit = 5, period = 'month' }: TopProjectsProps) {
                     className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="text-2xl min-w-[2.5rem] text-center">
+                      <div className="text-2xl min-w-10 text-center">
                         {getMedalEmoji(project.rank)}
                       </div>
                       <div>

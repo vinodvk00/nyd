@@ -2,6 +2,7 @@
 
 import { Suspense, useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { mutate } from "swr"
 import { SummaryCards } from "./components/summary-cards"
 import { ActivityChart } from "./components/activity-chart"
 import { ProjectBreakdown } from "./components/project-breakdown"
@@ -19,85 +20,74 @@ const VALID_TABS = ['overview', 'projects', 'patterns']
 function DashboardContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [isClient, setIsClient] = useState(false)
   const [syncing, setSyncing] = useState(false)
 
-  // Client-side hydration check
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
-
-  const getInitialPeriod = (): TimePeriod => {
+  const getPeriod = (): TimePeriod => {
     const urlPeriod = searchParams.get('period') as TimePeriod
     if (urlPeriod && VALID_PERIODS.includes(urlPeriod)) {
       return urlPeriod
     }
-
-    if (isClient) {
-      const savedPeriod = localStorage.getItem('lastPeriod') as TimePeriod
-      if (savedPeriod && VALID_PERIODS.includes(savedPeriod)) {
-        return savedPeriod
-      }
-    }
-
-    return 'month'
+    return 'month' 
   }
 
-  const getInitialTab = (): string => {
+  const getActiveTab = (): string => {
     const urlTab = searchParams.get('tab')
     if (urlTab && VALID_TABS.includes(urlTab)) {
       return urlTab
     }
-
-    if (isClient) {
-      const savedTab = localStorage.getItem('lastTab')
-      if (savedTab && VALID_TABS.includes(savedTab)) {
-        return savedTab
-      }
-    }
-
-    return 'overview'
+    return 'overview' 
   }
 
-  const [period, setPeriod] = useState<TimePeriod>(getInitialPeriod())
-  const [activeTab, setActiveTab] = useState(getInitialTab())
+  const period = getPeriod()
+  const activeTab = getActiveTab()
 
   useEffect(() => {
-    const urlPeriod = searchParams.get('period') as TimePeriod
-    if (urlPeriod && VALID_PERIODS.includes(urlPeriod) && urlPeriod !== period) {
-      setPeriod(urlPeriod)
-    }
-  }, [searchParams, period])
-
-  useEffect(() => {
+    const urlPeriod = searchParams.get('period')
     const urlTab = searchParams.get('tab')
-    if (urlTab && VALID_TABS.includes(urlTab) && urlTab !== activeTab) {
-      setActiveTab(urlTab)
+
+    if (!urlPeriod || !urlTab) {
+      const savedPeriod = localStorage.getItem('lastPeriod') as TimePeriod
+      const savedTab = localStorage.getItem('lastTab')
+
+      const params = new URLSearchParams(searchParams.toString())
+      let shouldUpdate = false
+
+      if (!urlPeriod && savedPeriod && VALID_PERIODS.includes(savedPeriod)) {
+        params.set('period', savedPeriod)
+        shouldUpdate = true
+      } else if (!urlPeriod) {
+        params.set('period', 'month')
+        shouldUpdate = true
+      }
+
+      if (!urlTab && savedTab && VALID_TABS.includes(savedTab)) {
+        params.set('tab', savedTab)
+        shouldUpdate = true
+      } else if (!urlTab) {
+        params.set('tab', 'overview')
+        shouldUpdate = true
+      }
+
+      if (shouldUpdate) {
+        router.replace(`?${params.toString()}`, { scroll: false })
+      }
     }
-  }, [searchParams, activeTab])
+  }, []) 
 
   const handlePeriodChange = (newPeriod: TimePeriod) => {
-    setPeriod(newPeriod)
-
     const params = new URLSearchParams(searchParams.toString())
     params.set('period', newPeriod)
     router.push(`?${params.toString()}`, { scroll: false })
 
-    if (isClient) {
-      localStorage.setItem('lastPeriod', newPeriod)
-    }
+    localStorage.setItem('lastPeriod', newPeriod)
   }
 
   const handleTabChange = (newTab: string) => {
-    setActiveTab(newTab)
-
     const params = new URLSearchParams(searchParams.toString())
     params.set('tab', newTab)
     router.push(`?${params.toString()}`, { scroll: false })
 
-    if (isClient) {
-      localStorage.setItem('lastTab', newTab)
-    }
+    localStorage.setItem('lastTab', newTab)
   }
 
   const handleSync = async () => {
@@ -114,10 +104,13 @@ function DashboardContent() {
           ? `\n\nWarning: ${result.errors.length} errors occurred`
           : '')
 
-      alert(message)
+      await mutate(
+        key => Array.isArray(key) && typeof key[0] === 'string',
+        undefined,
+        { revalidate: true }
+      )
 
-      // Refresh the page to show updated data
-      window.location.reload()
+      alert(message)
     } catch (error) {
       console.error('Sync failed:', error)
       alert(`Sync failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -161,23 +154,26 @@ function DashboardContent() {
           <TabsTrigger value="patterns">Patterns</TabsTrigger>
         </TabsList>
 
-        {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid gap-6 lg:grid-cols-2">
-            <ActivityChart groupBy="day" period={period} />
-            <TopProjects limit={5} period={period} />
+        {/* Tab Content Container - Instant Switch (No Animation) */}
+        <div>
+          {/* Overview Tab - Always mounted */}
+          <div className={`space-y-6 ${activeTab === 'overview' ? 'block' : 'hidden'}`}>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <ActivityChart groupBy="day" period={period} />
+              <TopProjects limit={5} period={period} />
+            </div>
           </div>
-        </TabsContent>
 
-        {/* Projects Tab */}
-        <TabsContent value="projects" className="space-y-6">
-          <ProjectBreakdown period={period} />
-        </TabsContent>
+          {/* Projects Tab - Always mounted */}
+          <div className={`space-y-6 ${activeTab === 'projects' ? 'block' : 'hidden'}`}>
+            <ProjectBreakdown period={period} />
+          </div>
 
-        {/* Patterns Tab */}
-        <TabsContent value="patterns" className="space-y-6">
-          <HourlyPattern period={period} />
-        </TabsContent>
+          {/* Patterns Tab - Always mounted */}
+          <div className={`space-y-6 ${activeTab === 'patterns' ? 'block' : 'hidden'}`}>
+            <HourlyPattern period={period} />
+          </div>
+        </div>
       </Tabs>
     </div>
   )

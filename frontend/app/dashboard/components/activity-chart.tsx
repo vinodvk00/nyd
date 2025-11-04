@@ -17,12 +17,12 @@ interface ActivityChartProps {
 export function ActivityChart({ startDate, endDate, groupBy = 'day', period }: ActivityChartProps) {
   const { data, loading, error } = useActivityData(startDate, endDate, groupBy, period)
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <Card>
         <CardHeader>
           <Skeleton className="h-6 w-32" />
-          <Skeleton className="h-4 w-48 mt-2" />
+          <Skeleton className="h-4 w-48" />
         </CardHeader>
         <CardContent>
           <Skeleton className="h-80 w-full" />

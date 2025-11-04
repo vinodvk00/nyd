@@ -13,13 +13,14 @@ export function SummaryCards({ period = 'month' }: SummaryCardsProps) {
   const { data: stats, loading: statsLoading, error: statsError } = useSummaryStats(period)
   const { data: hoursTrend, loading: trendLoading } = useTrends('hours', period)
 
-  if (statsLoading || trendLoading) {
+  if ((statsLoading || trendLoading) && !stats) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[...Array(4)].map((_, i) => (
           <Card key={i}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-4" />
             </CardHeader>
             <CardContent>
               <Skeleton className="h-8 w-20 mb-2" />

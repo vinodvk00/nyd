@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react';
+import useSWR from 'swr';
 import { fetchSummaryStats } from '@/lib/api';
 import type { SummaryStats, TimePeriod } from '@/types/analytics';
 
@@ -12,37 +12,24 @@ interface UseSummaryStatsResult {
 }
 
 /**
- * Hook to fetch summary statistics
+ * Hook to fetch summary statistics with SWR caching
  * @param period - Time period (today, week, month, all)
  * @returns Summary stats data, loading state, error, and refetch function
  */
 export function useSummaryStats(period: TimePeriod = 'month'): UseSummaryStatsResult {
-  const [data, setData] = useState<SummaryStats | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const result = await fetchSummaryStats(period);
-      setData(result);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('An error occurred'));
-      setData(null);
-    } finally {
-      setLoading(false);
+  const { data, error, isLoading, mutate } = useSWR(
+    ['summary-stats', period],
+    () => fetchSummaryStats(period),
+    {
+      dedupingInterval: 60000,
+      revalidateOnFocus: false,
     }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, [period]);
+  );
 
   return {
-    data,
-    loading,
-    error,
-    refetch: fetchData,
+    data: data ?? null,
+    loading: isLoading,
+    error: error ?? null,
+    refetch: () => mutate(),
   };
 }

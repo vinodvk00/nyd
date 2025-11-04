@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react';
+import useSWR from 'swr';
 import { fetchActivityData } from '@/lib/api';
 import type { ActivityData, GroupBy, TimePeriod } from '@/types/analytics';
 
@@ -42,7 +42,7 @@ function getDateRangeFromPeriod(period?: TimePeriod): { startDate: string; endDa
 }
 
 /**
- * Hook to fetch activity timeline data
+ * Hook to fetch activity timeline data with SWR caching
  * @param startDate - Start date (YYYY-MM-DD)
  * @param endDate - End date (YYYY-MM-DD)
  * @param groupBy - Grouping (day, week, month)
@@ -55,42 +55,28 @@ export function useActivityData(
   groupBy: GroupBy = 'day',
   period?: TimePeriod
 ): UseActivityDataResult {
-  const [data, setData] = useState<ActivityData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<Error | null>(null);
+  let finalStartDate = startDate;
+  let finalEndDate = endDate;
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  if (period && !startDate && !endDate) {
+    const range = getDateRangeFromPeriod(period);
+    finalStartDate = range.startDate;
+    finalEndDate = range.endDate;
+  }
 
-      let finalStartDate = startDate;
-      let finalEndDate = endDate;
-
-      if (period && !startDate && !endDate) {
-        const range = getDateRangeFromPeriod(period);
-        finalStartDate = range.startDate;
-        finalEndDate = range.endDate;
-      }
-
-      const result = await fetchActivityData(finalStartDate, finalEndDate, groupBy);
-      setData(result);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('An error occurred'));
-      setData(null);
-    } finally {
-      setLoading(false);
+  const { data, error, isLoading, mutate } = useSWR(
+    ['activity-data', finalStartDate, finalEndDate, groupBy, period],
+    () => fetchActivityData(finalStartDate, finalEndDate, groupBy),
+    {
+      dedupingInterval: 60000,
+      revalidateOnFocus: false,
     }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, [startDate, endDate, groupBy, period]);
+  );
 
   return {
-    data,
-    loading,
-    error,
-    refetch: fetchData,
+    data: data ?? null,
+    loading: isLoading,
+    error: error ?? null,
+    refetch: () => mutate(),
   };
 }

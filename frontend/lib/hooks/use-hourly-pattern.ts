@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react';
+import useSWR from 'swr';
 import { fetchHourlyPattern } from '@/lib/api';
 import type { HourlyPattern, TimePeriod } from '@/types/analytics';
 
@@ -42,7 +42,7 @@ function getDateRangeFromPeriod(period?: TimePeriod): { startDate: string; endDa
 }
 
 /**
- * Hook to fetch hourly activity pattern
+ * Hook to fetch hourly activity pattern with SWR caching
  * @param startDate - Start date (YYYY-MM-DD)
  * @param endDate - End date (YYYY-MM-DD)
  * @param period - Time period (today, week, month, all)
@@ -53,42 +53,28 @@ export function useHourlyPattern(
   endDate?: string,
   period?: TimePeriod
 ): UseHourlyPatternResult {
-  const [data, setData] = useState<HourlyPattern | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<Error | null>(null);
+  let finalStartDate = startDate;
+  let finalEndDate = endDate;
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  if (period && !startDate && !endDate) {
+    const range = getDateRangeFromPeriod(period);
+    finalStartDate = range.startDate;
+    finalEndDate = range.endDate;
+  }
 
-      let finalStartDate = startDate;
-      let finalEndDate = endDate;
-
-      if (period && !startDate && !endDate) {
-        const range = getDateRangeFromPeriod(period);
-        finalStartDate = range.startDate;
-        finalEndDate = range.endDate;
-      }
-
-      const result = await fetchHourlyPattern(finalStartDate, finalEndDate);
-      setData(result);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('An error occurred'));
-      setData(null);
-    } finally {
-      setLoading(false);
+  const { data, error, isLoading, mutate } = useSWR(
+    ['hourly-pattern', finalStartDate, finalEndDate, period],
+    () => fetchHourlyPattern(finalStartDate, finalEndDate),
+    {
+      dedupingInterval: 60000,
+      revalidateOnFocus: false,
     }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, [startDate, endDate, period]);
+  );
 
   return {
-    data,
-    loading,
-    error,
-    refetch: fetchData,
+    data: data ?? null,
+    loading: isLoading,
+    error: error ?? null,
+    refetch: () => mutate(),
   };
 }
