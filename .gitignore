@@ -92,3 +92,6 @@ tmp/
 
 # settings
 *.local.json
+
+# png
+*.png

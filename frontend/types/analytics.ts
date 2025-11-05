@@ -97,3 +97,40 @@ export type ApiResponse<T> = {
   success: false;
   error: ApiError;
 };
+
+// Track Entity (from backend)
+// Used by /tracks/project/:projectName endpoint
+export interface Track {
+  id: number;
+  togglId: number;
+  description: string | null;
+  start: string; // ISO date string
+  duration: number; // in seconds
+  projectName: string;
+  projectId: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Project Detail Page Types
+export interface ProjectStats {
+  totalHours: number;
+  sessionCount: number;
+  averageSessionDuration: number;
+  lastActivity: Date | null;
+}
+
+export interface TimeBlockData {
+  name: string; // "Morning", "Afternoon", "Evening", "Night"
+  hours: number;
+  percentage: number;
+}
+
+export interface DayOfWeekData {
+  name: string; // "Monday", "Tuesday", etc.
+  hours: number;
+}
+
+export interface DateGroupedTracks {
+  [dateKey: string]: Track[];
+}

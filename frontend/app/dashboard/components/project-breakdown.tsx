@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { BarList } from "@tremor/react";
 import { useProjectBreakdown } from "@/lib/hooks";
 import type { TimePeriod } from "@/types/analytics";
+import Link from "next/link";
 
 interface ProjectBreakdownProps {
   startDate?: string;
@@ -89,11 +90,14 @@ export function ProjectBreakdown({
                 {data.projects.map((project, index) => (
                   <div
                     key={index}
-                    className="grid grid-cols-4 gap-4 p-3 border-t text-sm"
+                    className="grid grid-cols-4 gap-4 p-3 border-t text-sm hover:bg-muted/50 transition-colors"
                   >
-                    <div className="font-medium truncate">
+                    <Link
+                      href={`/projects/${encodeURIComponent(project.projectName)}`}
+                      className="font-medium truncate hover:text-blue-600 hover:underline cursor-pointer"
+                    >
                       {project.projectName}
-                    </div>
+                    </Link>
                     <div className="text-right">
                       {project.totalHours.toFixed(1)}h
                     </div>

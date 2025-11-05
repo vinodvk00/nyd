@@ -1,5 +1,17 @@
-import { Controller, Get, Query, HttpException, HttpStatus, Logger } from '@nestjs/common';
-import { AnalyticsService, TimePeriod, GroupBy, TrendMetric } from './analytics.service';
+import {
+  Controller,
+  Get,
+  Query,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
+import {
+  AnalyticsService,
+  TimePeriod,
+  GroupBy,
+  TrendMetric,
+} from './analytics.service';
 
 @Controller('tracks/stats')
 export class AnalyticsController {
@@ -22,7 +34,8 @@ export class AnalyticsController {
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           message: 'Failed to fetch summary statistics',
           error: error.message,
-          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+          stack:
+            process.env.NODE_ENV === 'development' ? error.stack : undefined,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
@@ -39,14 +52,18 @@ export class AnalyticsController {
     @Query('endDate') endDate?: string,
   ) {
     try {
-      return await this.analyticsService.getProjectBreakdown(startDate, endDate);
+      return await this.analyticsService.getProjectBreakdown(
+        startDate,
+        endDate,
+      );
     } catch (error) {
       throw new HttpException(
         {
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           message: 'Failed to fetch project breakdown',
           error: error.message,
-          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+          stack:
+            process.env.NODE_ENV === 'development' ? error.stack : undefined,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
@@ -65,14 +82,19 @@ export class AnalyticsController {
   ) {
     try {
       const validGroupBy = this.validateGroupBy(groupBy);
-      return await this.analyticsService.getActivityByDate(startDate, endDate, validGroupBy);
+      return await this.analyticsService.getActivityByDate(
+        startDate,
+        endDate,
+        validGroupBy,
+      );
     } catch (error) {
       throw new HttpException(
         {
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           message: 'Failed to fetch activity by date',
           error: error.message,
-          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+          stack:
+            process.env.NODE_ENV === 'development' ? error.stack : undefined,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
@@ -96,7 +118,8 @@ export class AnalyticsController {
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           message: 'Failed to fetch hourly pattern',
           error: error.message,
-          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+          stack:
+            process.env.NODE_ENV === 'development' ? error.stack : undefined,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
@@ -122,7 +145,8 @@ export class AnalyticsController {
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           message: 'Failed to fetch trends',
           error: error.message,
-          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+          stack:
+            process.env.NODE_ENV === 'development' ? error.stack : undefined,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
@@ -139,20 +163,31 @@ export class AnalyticsController {
     @Query('period') period?: string,
   ) {
     try {
-      this.logger.log(`Fetching top projects - limit: ${limit || '5'}, period: ${period || 'month'}`);
+      this.logger.log(
+        `Fetching top projects - limit: ${limit || '5'}, period: ${period || 'month'}`,
+      );
       const validLimit = limit ? parseInt(limit, 10) : 5;
       const validPeriod = this.validatePeriod(period);
-      const result = await this.analyticsService.getTopProjects(validLimit, validPeriod);
-      this.logger.log(`Successfully fetched ${result.topProjects.length} top projects`);
+      const result = await this.analyticsService.getTopProjects(
+        validLimit,
+        validPeriod,
+      );
+      this.logger.log(
+        `Successfully fetched ${result.topProjects.length} top projects`,
+      );
       return result;
     } catch (error) {
-      this.logger.error(`Failed to fetch top projects: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to fetch top projects: ${error.message}`,
+        error.stack,
+      );
       throw new HttpException(
         {
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           message: 'Failed to fetch top projects',
           error: error.message,
-          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+          stack:
+            process.env.NODE_ENV === 'development' ? error.stack : undefined,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );

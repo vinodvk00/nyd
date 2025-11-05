@@ -29,7 +29,7 @@ export class TracksService {
     }
     return {
       auth: {
-        username: apiToken as string,
+        username: apiToken,
         password: 'api_token',
       },
       headers: {
@@ -58,7 +58,7 @@ export class TracksService {
       const params = new URLSearchParams();
 
       const now = new Date();
-      let end = endDate ? new Date(endDate) : now;
+      const end = endDate ? new Date(endDate) : now;
       let start: Date;
 
       // Toggl API v9 limitation: can only fetch data from last 3 months
@@ -78,19 +78,21 @@ export class TracksService {
       }
 
       if (start > end) {
-        throw new Error(`Start date (${start.toISOString().split('T')[0]}) cannot be after end date (${end.toISOString().split('T')[0]})`);
+        throw new Error(
+          `Start date (${start.toISOString().split('T')[0]}) cannot be after end date (${end.toISOString().split('T')[0]})`,
+        );
       }
 
       if (start < threeMonthsAgo) {
         console.warn(
-          `Start date ${start.toISOString().split('T')[0]} is older than 3 months. Adjusting to ${threeMonthsAgo.toISOString().split('T')[0]}`
+          `Start date ${start.toISOString().split('T')[0]} is older than 3 months. Adjusting to ${threeMonthsAgo.toISOString().split('T')[0]}`,
         );
         start = threeMonthsAgo;
       }
 
       if (start > end) {
         throw new Error(
-          `The requested date range is outside the 3-month API limit. Please request dates from ${threeMonthsAgo.toISOString().split('T')[0]} onwards.`
+          `The requested date range is outside the 3-month API limit. Please request dates from ${threeMonthsAgo.toISOString().split('T')[0]} onwards.`,
         );
       }
 
@@ -116,22 +118,31 @@ export class TracksService {
       });
 
       if (error.response?.status === 400) {
-        const togglMessage = typeof error.response.data === 'string'
-          ? error.response.data
-          : error.response.data?.message || 'Bad request';
+        const togglMessage =
+          typeof error.response.data === 'string'
+            ? error.response.data
+            : error.response.data?.message || 'Bad request';
         throw new Error(`Toggl API Error: ${togglMessage}`);
       } else if (error.response?.status === 401) {
-        throw new Error('Authentication failed. Please check your Toggl API token.');
+        throw new Error(
+          'Authentication failed. Please check your Toggl API token.',
+        );
       } else if (error.response?.status === 403) {
-        throw new Error('Access forbidden. Please check your Toggl workspace permissions.');
+        throw new Error(
+          'Access forbidden. Please check your Toggl workspace permissions.',
+        );
       } else if (error.response?.status === 429) {
         throw new Error('Rate limit exceeded. Please try again later.');
       } else if (error.response) {
-        throw new Error(`Toggl API returned error ${error.response.status}: ${error.response.data}`);
+        throw new Error(
+          `Toggl API returned error ${error.response.status}: ${error.response.data}`,
+        );
       } else if (error.message) {
         throw error; // Re-throw validation errors
       } else {
-        throw new Error('Failed to connect to Toggl API. Please check your internet connection.');
+        throw new Error(
+          'Failed to connect to Toggl API. Please check your internet connection.',
+        );
       }
     }
   }
@@ -183,9 +194,9 @@ export class TracksService {
 
   async findOneWithProject(id: number) {
     return await this.trackRepository.findOne({
-      where: {id},
-      relations: ['project']
-    })
+      where: { id },
+      relations: ['project'],
+    });
   }
 
   /**
@@ -227,19 +238,21 @@ export class TracksService {
       }
 
       if (start > end) {
-        throw new Error(`Start date (${start.toISOString().split('T')[0]}) cannot be after end date (${end.toISOString().split('T')[0]})`);
+        throw new Error(
+          `Start date (${start.toISOString().split('T')[0]}) cannot be after end date (${end.toISOString().split('T')[0]})`,
+        );
       }
 
       if (start < threeMonthsAgo) {
         console.warn(
-          `Start date ${start.toISOString().split('T')[0]} is older than 3 months. Adjusting to ${threeMonthsAgo.toISOString().split('T')[0]}`
+          `Start date ${start.toISOString().split('T')[0]} is older than 3 months. Adjusting to ${threeMonthsAgo.toISOString().split('T')[0]}`,
         );
         start = threeMonthsAgo;
       }
 
       if (start > end) {
         throw new Error(
-          `The requested date range is outside the 3-month API limit. Please request dates from ${threeMonthsAgo.toISOString().split('T')[0]} onwards.`
+          `The requested date range is outside the 3-month API limit. Please request dates from ${threeMonthsAgo.toISOString().split('T')[0]} onwards.`,
         );
       }
 
@@ -286,14 +299,18 @@ export class TracksService {
           let projectName: string | undefined;
 
           if (entry.project_id) {
-            console.log(`Processing project ${entry.project_id} for entry ${entry.id}`);
+            console.log(
+              `Processing project ${entry.project_id} for entry ${entry.id}`,
+            );
 
             let project = await this.projectRepository.findOne({
               where: { id: entry.project_id },
             });
 
             if (!project) {
-              console.log(`Project ${entry.project_id} not found, fetching from Toggl...`);
+              console.log(
+                `Project ${entry.project_id} not found, fetching from Toggl...`,
+              );
 
               try {
                 const projectResponse = await axios.get(
@@ -305,15 +322,22 @@ export class TracksService {
 
                 project = this.projectRepository.create({
                   id: entry.project_id,
-                  name: projectResponse.data.name || `Project ${entry.project_id}`,
+                  name:
+                    projectResponse.data.name || `Project ${entry.project_id}`,
                   description: projectResponse.data.notes || null,
                 });
 
                 await this.projectRepository.save(project);
                 console.log(`Saved project ${project.id}: ${project.name}`);
               } catch (projectError) {
-                console.warn(`Failed to fetch project ${entry.project_id}:`, projectError.message);
-                console.warn(`Response status: ${projectError.response?.status}, Data:`, projectError.response?.data);
+                console.warn(
+                  `Failed to fetch project ${entry.project_id}:`,
+                  projectError.message,
+                );
+                console.warn(
+                  `Response status: ${projectError.response?.status}, Data:`,
+                  projectError.response?.data,
+                );
 
                 project = this.projectRepository.create({
                   id: entry.project_id,
@@ -324,12 +348,16 @@ export class TracksService {
                 console.log(`Created fallback project ${project.id}`);
               }
             } else {
-              console.log(`Using existing project ${project.id}: ${project.name}`);
+              console.log(
+                `Using existing project ${project.id}: ${project.name}`,
+              );
             }
 
             projectId = project.id;
             projectName = project.name;
-            console.log(`Set projectId=${projectId}, projectName=${projectName}`);
+            console.log(
+              `Set projectId=${projectId}, projectName=${projectName}`,
+            );
           } else {
             console.log(`Entry ${entry.id} has no project_id`);
           }
@@ -338,7 +366,8 @@ export class TracksService {
             togglId: entry.id,
             description: entry.description || '(No description)',
             start: new Date(entry.start),
-            duration: entry.duration && entry.duration > 0 ? entry.duration : undefined,
+            duration:
+              entry.duration && entry.duration > 0 ? entry.duration : undefined,
             projectId,
             projectName,
           };
@@ -352,7 +381,11 @@ export class TracksService {
             created++;
           }
         } catch (error) {
-          console.error(`Error processing entry ${entry?.id}:`, error.message, error.stack);
+          console.error(
+            `Error processing entry ${entry?.id}:`,
+            error.message,
+            error.stack,
+          );
           errors.push({ entryId: entry?.id, error: error.message });
           skipped++;
         }
@@ -372,7 +405,7 @@ export class TracksService {
       };
 
       if (errors.length > 0) {
-        result['errors'] = errors.slice(0, 5); 
+        result['errors'] = errors.slice(0, 5);
       }
 
       console.log('Sync completed:', result);
@@ -380,26 +413,39 @@ export class TracksService {
     } catch (error) {
       console.error('Error syncing from Toggl:', error.message, error.stack);
       if (error.response) {
-        console.error('Toggl API response error:', error.response.status, error.response.data);
+        console.error(
+          'Toggl API response error:',
+          error.response.status,
+          error.response.data,
+        );
       }
 
       if (error.response?.status === 400) {
-        const togglMessage = typeof error.response.data === 'string'
-          ? error.response.data
-          : error.response.data?.message || 'Bad request';
+        const togglMessage =
+          typeof error.response.data === 'string'
+            ? error.response.data
+            : error.response.data?.message || 'Bad request';
         throw new Error(`Toggl API Error: ${togglMessage}`);
       } else if (error.response?.status === 401) {
-        throw new Error('Authentication failed. Please check your Toggl API token.');
+        throw new Error(
+          'Authentication failed. Please check your Toggl API token.',
+        );
       } else if (error.response?.status === 403) {
-        throw new Error('Access forbidden. Please check your Toggl workspace permissions.');
+        throw new Error(
+          'Access forbidden. Please check your Toggl workspace permissions.',
+        );
       } else if (error.response?.status === 429) {
         throw new Error('Rate limit exceeded. Please try again later.');
       } else if (error.response) {
-        throw new Error(`Toggl API returned error ${error.response.status}: ${error.response.data}`);
+        throw new Error(
+          `Toggl API returned error ${error.response.status}: ${error.response.data}`,
+        );
       } else if (error.message) {
         throw error; // Re-throw validation errors
       } else {
-        throw new Error('Failed to connect to Toggl API. Please check your internet connection.');
+        throw new Error(
+          'Failed to connect to Toggl API. Please check your internet connection.',
+        );
       }
     }
   }

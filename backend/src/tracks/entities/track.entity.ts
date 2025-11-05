@@ -1,4 +1,12 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { Project } from './project.entity';
 
 @Entity('tracks')
@@ -18,14 +26,14 @@ export class Track {
   @Column({ type: 'int', nullable: true })
   duration: number;
 
-  @Column({nullable: true})
+  @Column({ nullable: true })
   projectName: string;
 
-  @ManyToOne(() => Project, project => project.tracks)
-  @JoinColumn({name: 'projectId'})
+  @ManyToOne(() => Project, (project) => project.tracks)
+  @JoinColumn({ name: 'projectId' })
   project: Project;
 
-  @Column({nullable: true})
+  @Column({ nullable: true })
   projectId: number;
 
   @CreateDateColumn()

@@ -1,98 +1,753 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Time Tracking Backend API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A NestJS-based backend service that integrates with Toggl Track API and provides local PostgreSQL analytics for time tracking data.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Overview
 
-## Description
+This backend serves as a bridge between Toggl Track API and a local analytics database. It provides:
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **Real-time Toggl API integration** - Fetch current and historical time entries directly from Toggl
+- **Local database sync** - Persist Toggl data to PostgreSQL for advanced analytics
+- **Analytics endpoints** - Generate insights and statistics from stored time tracking data
+- **Automatic project management** - Syncs project information from Toggl workspace
 
-## Project setup
+## Tech Stack
 
-```bash
-$ npm install
-```
+- **Framework:** NestJS 11.x
+- **Language:** TypeScript 5.x
+- **ORM:** TypeORM 0.3.x
+- **Database:** PostgreSQL
+- **HTTP Client:** Axios
+- **External API:** Toggl Track API v9
 
-## Compile and run the project
+## Prerequisites
 
-```bash
-# development
-$ npm run start
+Before getting started, ensure you have:
 
-# watch mode
-$ npm run start:dev
+- **Node.js** 18.x or higher
+- **PostgreSQL** 12.x or higher installed and running
+- **Toggl Track Account** with API token
+  - Get your API token from [Toggl Profile Settings](https://track.toggl.com/profile)
+  - Find your workspace ID from Toggl workspace settings
 
-# production mode
-$ npm run start:prod
-```
+## Installation & Setup
 
-## Run tests
+### 1. Navigate to Backend Directory
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+cd backend
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### 2. Install Dependencies
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm install
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### 3. Database Setup
 
-## Resources
+Create a PostgreSQL database for the application:
 
-Check out a few resources that may come in handy when working with NestJS:
+```sql
+CREATE DATABASE time_tracking_db;
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### 4. Environment Configuration
 
-## Support
+Create a `.env` file in the `backend` directory with the following variables:
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```env
+# Server Configuration
+PORT=3000
+NODE_ENV=development
 
-## Stay in touch
+# Toggl API Configuration
+TOGGL_API_TOKEN=your_toggl_api_token_here
+TOGGL_WORKSPACE_ID=your_workspace_id_here
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+# PostgreSQL Database Configuration
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=your_db_username
+DB_PASSWORD=your_db_password
+DB_DATABASE=time_tracking_db
+```
+
+**Note:** The application uses `synchronize: true` in development, which automatically creates/updates database tables based on entities. This should be disabled in production environments.
+
+### 5. Start the Application
+
+```bash
+# Development mode with hot reload
+npm run start:dev
+
+# Production mode
+npm run build
+npm run start:prod
+```
+
+The API will be available at `http://localhost:3000` (or your configured PORT).
+
+## Development
+
+### Available Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run start:dev` | Start development server with hot reload |
+| `npm run start:debug` | Start in debug mode with watch |
+| `npm run build` | Build the application for production |
+| `npm run start:prod` | Run production build |
+| `npm run lint` | Lint and auto-fix TypeScript files |
+| `npm run format` | Format code with Prettier |
+| `npm run test` | Run unit tests |
+| `npm run test:watch` | Run tests in watch mode |
+| `npm run test:cov` | Run tests with coverage report |
+| `npm run test:e2e` | Run end-to-end tests |
+| `npm run test:debug` | Debug tests with Node inspector |
+
+### Running Tests
+
+```bash
+# Unit tests
+npm run test
+
+# E2E tests
+npm run test:e2e
+
+# Test coverage
+npm run test:cov
+```
+
+Coverage reports are generated in the `coverage/` directory.
+
+## API Documentation
+
+### Base URL
+
+```
+http://localhost:8000
+```
+
+### Authentication
+
+Currently, no authentication is required for API endpoints. Toggl API authentication is handled server-side using the configured API token.
+
+---
+
+### Toggl Integration Endpoints
+
+#### Get Current Running Task
+
+Fetches the currently active time entry from Toggl (if any).
+
+```http
+GET /tracks/toggl/current
+```
+
+**Response:** `200 OK`
+
+```json
+{
+  "id": 12345678,
+  "workspace_id": 9876543,
+  "project_id": 111222333,
+  "description": "Working on API documentation",
+  "start": "2025-01-15T14:30:00Z",
+  "duration": -1736952600,
+  "stop": null
+}
+```
+
+**Response:** `204 No Content` (when no task is running)
+
+---
+
+#### Get All Tasks from Toggl
+
+Fetches time entries directly from Toggl API within a date range.
+
+```http
+GET /tracks/toggl?startDate=2025-01-01&endDate=2025-01-31
+```
+
+**Query Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `startDate` | string | No | Start date (YYYY-MM-DD). Defaults to 3 months ago |
+| `endDate` | string | No | End date (YYYY-MM-DD). Defaults to today |
+
+**Note:** Toggl API has a 3-month historical data limit. Dates older than 3 months will be automatically adjusted.
+
+**Response:** `200 OK`
+
+```json
+[
+  {
+    "id": 12345678,
+    "workspace_id": 9876543,
+    "project_id": 111222333,
+    "description": "Backend development",
+    "start": "2025-01-15T09:00:00Z",
+    "stop": "2025-01-15T12:30:00Z",
+    "duration": 12600
+  }
+]
+```
+
+---
+
+#### Sync Toggl Data to Database
+
+Syncs time entries from Toggl to the local PostgreSQL database.
+
+```http
+POST /tracks/sync?startDate=2025-01-01&endDate=2025-01-31
+```
+
+**Query Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `startDate` | string | No | Start date (YYYY-MM-DD). Defaults to 3 months ago |
+| `endDate` | string | No | End date (YYYY-MM-DD). Defaults to today |
+
+**Process:**
+1. Fetches time entries from Toggl within the date range
+2. For each entry with a project, ensures the project exists locally
+3. Fetches missing projects from Toggl API
+4. Creates or updates track records using `togglId` as unique identifier
+5. Returns sync statistics
+
+**Response:** `201 Created`
+
+```json
+{
+  "message": "Sync completed successfully",
+  "stats": {
+    "total": 150,
+    "created": 45,
+    "updated": 105,
+    "skipped": 0,
+    "errors": []
+  }
+}
+```
+
+---
+
+### Track CRUD Endpoints
+
+#### Create Track
+
+```http
+POST /tracks
+Content-Type: application/json
+
+{
+  "togglId": 12345678,
+  "description": "Backend API development",
+  "start": "2025-01-15T09:00:00Z",
+  "duration": 7200,
+  "projectId": 111222333,
+  "projectName": "Time Tracking App"
+}
+```
+
+#### Get All Tracks
+
+```http
+GET /tracks
+```
+
+#### Get Track by ID
+
+```http
+GET /tracks/:id
+```
+
+#### Get Tracks by Project
+
+```http
+GET /tracks/project/:projectName
+```
+
+#### Get Tracks by Date Range
+
+```http
+GET /tracks/date-range?startDate=2025-01-01&endDate=2025-01-31
+```
+
+#### Get Paginated Tracks
+
+```http
+GET /tracks/paginated?page=1&limit=20
+```
+
+**Query Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `page` | number | 1 | Page number |
+| `limit` | number | 20 | Items per page |
+
+#### Update Track
+
+```http
+PATCH /tracks/:id
+Content-Type: application/json
+
+{
+  "description": "Updated description"
+}
+```
+
+#### Delete Track
+
+```http
+DELETE /tracks/:id
+```
+
+---
+
+### Analytics Endpoints
+
+All analytics endpoints return aggregated data from the local PostgreSQL database. Duration values are converted from seconds to hours (rounded to 2 decimals).
+
+#### Get Summary Statistics
+
+Returns overview statistics for a time period.
+
+```http
+GET /tracks/stats/summary?period=week
+```
+
+**Query Parameters:**
+
+| Parameter | Type | Required | Options | Default |
+|-----------|------|----------|---------|---------|
+| `period` | string | No | `today`, `week`, `month`, `all` | `week` |
+
+**Response:** `200 OK`
+
+```json
+{
+  "totalHours": 120.50,
+  "totalSessions": 45,
+  "averageSessionDuration": 2.68,
+  "activeProjects": 5,
+  "period": "week"
+}
+```
+
+---
+
+#### Get Project Breakdown
+
+Returns time distribution per project with percentages.
+
+```http
+GET /tracks/stats/by-project?startDate=2025-01-01&endDate=2025-01-31
+```
+
+**Query Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `startDate` | string | No | Start date (YYYY-MM-DD). Defaults to 30 days ago |
+| `endDate` | string | No | End date (YYYY-MM-DD). Defaults to today |
+
+**Response:** `200 OK`
+
+```json
+{
+  "data": [
+    {
+      "projectName": "Time Tracking App",
+      "totalHours": 45.50,
+      "sessionCount": 15,
+      "percentage": 37.76
+    },
+    {
+      "projectName": "Client Portal",
+      "totalHours": 32.25,
+      "sessionCount": 12,
+      "percentage": 26.77
+    }
+  ],
+  "totalHours": 120.50
+}
+```
+
+---
+
+#### Get Activity by Date
+
+Returns timeline data grouped by day, week, or month.
+
+```http
+GET /tracks/stats/by-date?startDate=2025-01-01&endDate=2025-01-31&groupBy=day
+```
+
+**Query Parameters:**
+
+| Parameter | Type | Required | Options | Default |
+|-----------|------|----------|---------|---------|
+| `startDate` | string | No | YYYY-MM-DD | 30 days ago |
+| `endDate` | string | No | YYYY-MM-DD | Today |
+| `groupBy` | string | No | `day`, `week`, `month` | `day` |
+
+**Response:** `200 OK`
+
+```json
+{
+  "data": [
+    {
+      "date": "2025-01-15",
+      "totalHours": 8.50,
+      "sessionCount": 4
+    },
+    {
+      "date": "2025-01-16",
+      "totalHours": 7.25,
+      "sessionCount": 3
+    }
+  ],
+  "groupBy": "day"
+}
+```
+
+---
+
+#### Get Hourly Pattern
+
+Returns activity distribution by hour of day (0-23).
+
+```http
+GET /tracks/stats/hourly-pattern?startDate=2025-01-01&endDate=2025-01-31
+```
+
+**Query Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `startDate` | string | No | Start date (YYYY-MM-DD). Defaults to 30 days ago |
+| `endDate` | string | No | End date (YYYY-MM-DD). Defaults to today |
+
+**Response:** `200 OK`
+
+```json
+{
+  "data": [
+    {
+      "hour": 9,
+      "totalHours": 15.50,
+      "sessionCount": 12
+    },
+    {
+      "hour": 10,
+      "totalHours": 18.75,
+      "sessionCount": 15
+    }
+  ]
+}
+```
+
+---
+
+#### Get Trends
+
+Returns period-over-period comparison for hours or sessions.
+
+```http
+GET /tracks/stats/trends?metric=hours&period=week
+```
+
+**Query Parameters:**
+
+| Parameter | Type | Required | Options | Default |
+|-----------|------|----------|---------|---------|
+| `metric` | string | No | `hours`, `sessions` | `hours` |
+| `period` | string | No | `week`, `month` | `week` |
+
+**Response:** `200 OK`
+
+```json
+{
+  "current": {
+    "value": 42.50,
+    "startDate": "2025-01-08T00:00:00.000Z",
+    "endDate": "2025-01-15T00:00:00.000Z"
+  },
+  "previous": {
+    "value": 38.25,
+    "startDate": "2025-01-01T00:00:00.000Z",
+    "endDate": "2025-01-08T00:00:00.000Z"
+  },
+  "change": {
+    "absolute": 4.25,
+    "percentage": 11.11
+  },
+  "metric": "hours",
+  "period": "week"
+}
+```
+
+---
+
+#### Get Top Projects
+
+Returns ranked projects by time spent.
+
+```http
+GET /tracks/stats/top-projects?limit=5&period=month
+```
+
+**Query Parameters:**
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `limit` | number | No | 10 | Number of top projects to return |
+| `period` | string | No | `month` | Time period (`week`, `month`, `all`) |
+
+**Response:** `200 OK`
+
+```json
+{
+  "data": [
+    {
+      "projectName": "Time Tracking App",
+      "totalHours": 85.50,
+      "sessionCount": 32,
+      "rank": 1
+    },
+    {
+      "projectName": "Client Portal",
+      "totalHours": 62.25,
+      "sessionCount": 24,
+      "rank": 2
+    }
+  ],
+  "limit": 5,
+  "period": "month"
+}
+```
+
+---
+
+## Data Models
+
+### Track Entity
+
+Represents a time tracking entry.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | number | Auto-generated primary key |
+| `togglId` | number | Unique Toggl time entry ID |
+| `description` | string | Task description |
+| `start` | Date | Start timestamp |
+| `duration` | number | Duration in seconds (null for running tasks) |
+| `projectId` | number | Foreign key to Project |
+| `projectName` | string | Denormalized project name for query performance |
+| `createdAt` | Date | Record creation timestamp |
+| `updatedAt` | Date | Record update timestamp |
+
+**Relationships:**
+- Many-to-one with Project entity
+
+### Project Entity
+
+Represents a Toggl project.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | number | Primary key (from Toggl project ID) |
+| `name` | string | Project name |
+| `description` | string | Project description (nullable) |
+| `createdAt` | Date | Record creation timestamp |
+| `updatedAt` | Date | Record update timestamp |
+
+**Relationships:**
+- One-to-many with Track entity
+
+**Entity Relationship:**
+
+```
+Project (1) ──────< (Many) Track
+   id                   projectId
+```
+
+---
+
+## Key Features & Implementation Details
+
+### Toggl Sync Process
+
+The sync operation follows this workflow:
+
+1. **Fetch Time Entries:** Retrieves time entries from Toggl API within the specified date range
+2. **Project Resolution:** For each entry with a `project_id`:
+   - Checks if the project exists in the local database
+   - If not found, fetches project details from Toggl API: `GET /workspaces/{workspace_id}/projects/{project_id}`
+   - Creates project record (or fallback project if fetch fails)
+3. **Track Creation/Update:** Uses `togglId` as unique identifier to prevent duplicates
+4. **Error Handling:** Collects errors during sync but continues processing. Returns up to 5 errors in response
+
+### Toggl API Limitations
+
+- **Historical Data:** Toggl API v9 can only fetch data from the last 3 months
+- **Auto-adjustment:** Both `getAllTasks()` and `syncFromToggl()` automatically adjust start dates that exceed this limit
+- **Date Format:** Dates are converted to ISO format (YYYY-MM-DD) for API requests
+
+### Project Handling
+
+- **Primary Keys:** Project IDs from Toggl are used directly as PostgreSQL primary keys
+- **Fallback Creation:** If project fetch fails, creates a project with name "Project {id}"
+- **Denormalization:** Both `projectId` and `projectName` are stored in Track entity for optimized queries
+
+### Analytics Calculations
+
+- **Duration Conversion:** All durations are converted from seconds to hours
+- **Precision:** Hours are rounded to 2 decimal places
+- **Default Date Ranges:** Analytics endpoints default to 30 days if dates not specified
+- **Database Functions:** Uses PostgreSQL-specific functions (TO_CHAR, EXTRACT) for date grouping
+
+### Error Handling
+
+- **Development Mode:** Detailed error messages with stack traces
+- **Production Mode:** Generic error messages without sensitive details
+- **Logging:** Uses NestJS Logger for important operations and errors
+- **Validation:** Date validation ensures `startDate < endDate`
+
+---
+
+## Architecture
+
+### Module Structure
+
+```
+backend/
+├── src/
+│   ├── app.module.ts           # Root module (ConfigModule + TypeORM + TracksModule)
+│   ├── main.ts                 # Application entry point
+│   └── tracks/
+│       ├── tracks.module.ts    # Feature module
+│       ├── tracks.controller.ts
+│       ├── tracks.service.ts
+│       ├── analytics.controller.ts
+│       ├── analytics.service.ts
+│       ├── entities/
+│       │   ├── track.entity.ts
+│       │   └── project.entity.ts
+│       └── dto/
+│           └── create-track.dto.ts
+└── test/
+    └── app.e2e-spec.ts
+```
+
+### Service Layer Responsibilities
+
+**TracksService:**
+- Toggl API integration (current task, all tasks)
+- Database synchronization
+- CRUD operations for Track records
+- Specialized queries (by project, date range, pagination)
+
+**AnalyticsService:**
+- Aggregated statistics (summary, trends)
+- Project breakdown and rankings
+- Timeline data (activity by date)
+- Hourly pattern analysis
+
+---
+
+## Troubleshooting
+
+### Database Connection Fails
+
+**Error:** `Unable to connect to the database`
+
+**Solution:**
+- Verify PostgreSQL is running: `pg_isready`
+- Check `.env` database credentials
+- Ensure database exists: `psql -l`
+- Test connection: `psql -h localhost -U your_username -d time_tracking_db`
+
+### Toggl API Returns 401 Unauthorized
+
+**Error:** `Request failed with status code 401`
+
+**Solution:**
+- Verify `TOGGL_API_TOKEN` in `.env` file
+- Check token validity at [Toggl Profile Settings](https://track.toggl.com/profile)
+- Ensure token has proper workspace access
+
+### Sync Returns Empty Results
+
+**Solution:**
+- Verify `TOGGL_WORKSPACE_ID` is correct
+- Check date range (cannot exceed 3 months from today)
+- Confirm you have time entries in Toggl for the specified period
+
+### TypeORM Synchronization Issues
+
+**Error:** Database schema mismatch
+
+**Solution:**
+- In development: Set `synchronize: true` in `app.module.ts` (line 24)
+- In production: Use proper migrations instead of synchronize
+- Clear and recreate database if needed
+
+### Port Already in Use
+
+**Error:** `Port 3000 is already in use`
+
+**Solution:**
+- Change `PORT` in `.env` file
+- Kill process using port: `lsof -ti:3000 | xargs kill` (macOS/Linux) or `netstat -ano | findstr :3000` (Windows)
+
+---
+
+## Production Considerations
+
+Before deploying to production:
+
+1. **Disable Synchronize:**
+   - Set `synchronize: false` in `src/app.module.ts`
+   - Use TypeORM migrations for schema changes
+
+2. **Environment Variables:**
+   - Use secure credential management
+   - Never commit `.env` file to version control
+
+3. **CORS Configuration:**
+   - Configure allowed origins in `main.ts`
+   - Enable credentials if needed for frontend
+
+4. **Rate Limiting:**
+   - Implement rate limiting for public endpoints
+   - Respect Toggl API rate limits
+
+5. **Logging:**
+   - Configure production-grade logging (Winston, etc.)
+   - Set `NODE_ENV=production`
+
+6. **Database:**
+   - Use connection pooling for production
+   - Regular backups
+   - Implement proper indexes for frequently queried fields
+
+---
+
+## Related Documentation
+
+- **Frontend Application:** `../frontend/README.md`
+- **Toggl API Documentation:** [https://developers.track.toggl.com/docs/](https://developers.track.toggl.com/docs/)
+
+---
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+UNLICENSED - Private project

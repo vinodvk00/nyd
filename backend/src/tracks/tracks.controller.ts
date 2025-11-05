@@ -75,7 +75,10 @@ export class TracksController {
   }
 
   @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateTrackDto: UpdateTrackDto) {
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateTrackDto: UpdateTrackDto,
+  ) {
     return this.tracksService.update(id, updateTrackDto);
   }
 

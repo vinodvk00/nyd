@@ -14,6 +14,6 @@ async function bootstrap() {
 
   const res = await app.listen(process.env.PORT ?? 3000);
 
-  console.log("app : ", res._connectionKey);
+  console.log('app : ', res._connectionKey);
 }
 bootstrap();

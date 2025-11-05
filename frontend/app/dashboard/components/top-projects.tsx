@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
 import { useTopProjects } from "@/lib/hooks"
 import type { TimePeriod } from "@/types/analytics"
+import Link from "next/link"
 
 interface TopProjectsProps {
   limit?: number;
@@ -82,16 +83,17 @@ export function TopProjects({ limit = 5, period = 'month' }: TopProjectsProps) {
         ) : (
           <div className="space-y-2">
             {data.topProjects.map((project) => (
-                  <div
+                  <Link
                     key={project.rank}
-                    className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                    href={`/projects/${encodeURIComponent(project.projectName)}`}
+                    className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
                       <div className="text-2xl min-w-10 text-center">
                         {getMedalEmoji(project.rank)}
                       </div>
                       <div>
-                        <div className="font-medium">{project.projectName}</div>
+                        <div className="font-medium hover:text-blue-600 hover:underline">{project.projectName}</div>
                         {project.projectId && (
                           <div className="text-xs text-muted-foreground">
                             Project ID: {project.projectId}
@@ -104,7 +106,7 @@ export function TopProjects({ limit = 5, period = 'month' }: TopProjectsProps) {
                         {project.totalHours.toFixed(1)}h
                       </Badge>
                     </div>
-                  </div>
+                  </Link>
                 ))}
           </div>
         )}
