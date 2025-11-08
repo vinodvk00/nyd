@@ -20,14 +20,22 @@ export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 
   /**
-   * GET /tracks/stats/summary?period=today|week|month|all
-   * Get summary statistics for a given period
+   * GET /tracks/stats/summary?period=today|week|month|all&startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+   * Get summary statistics for a given period or custom date range
    */
   @Get('summary')
-  async getSummary(@Query('period') period?: string) {
+  async getSummary(
+    @Query('period') period?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
     try {
-      const validPeriod = this.validatePeriod(period);
-      return await this.analyticsService.getSummaryStats(validPeriod);
+      const validPeriod = period ? this.validatePeriod(period) : undefined;
+      return await this.analyticsService.getSummaryStats(
+        validPeriod,
+        startDate,
+        endDate,
+      );
     } catch (error) {
       throw new HttpException(
         {
@@ -127,18 +135,25 @@ export class AnalyticsController {
   }
 
   /**
-   * GET /tracks/stats/trends?metric=hours|sessions&period=week|month
-   * Get trends compared to previous period
+   * GET /tracks/stats/trends?metric=hours|sessions&period=week|month&startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+   * Get trends compared to previous period or custom date range
    */
   @Get('trends')
   async getTrends(
     @Query('metric') metric?: string,
     @Query('period') period?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
   ) {
     try {
       const validMetric = this.validateMetric(metric);
-      const validPeriod = this.validatePeriod(period);
-      return await this.analyticsService.getTrends(validMetric, validPeriod);
+      const validPeriod = period ? this.validatePeriod(period) : undefined;
+      return await this.analyticsService.getTrends(
+        validMetric,
+        validPeriod,
+        startDate,
+        endDate,
+      );
     } catch (error) {
       throw new HttpException(
         {
@@ -154,23 +169,27 @@ export class AnalyticsController {
   }
 
   /**
-   * GET /tracks/stats/top-projects?limit=5&period=week|month|all
-   * Get top projects by time spent
+   * GET /tracks/stats/top-projects?limit=5&period=week|month|all&startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+   * Get top projects by time spent for a period or custom date range
    */
   @Get('top-projects')
   async getTopProjects(
     @Query('limit') limit?: string,
     @Query('period') period?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
   ) {
     try {
       this.logger.log(
-        `Fetching top projects - limit: ${limit || '5'}, period: ${period || 'month'}`,
+        `Fetching top projects - limit: ${limit || '5'}, period: ${period || 'month'}, startDate: ${startDate}, endDate: ${endDate}`,
       );
       const validLimit = limit ? parseInt(limit, 10) : 5;
-      const validPeriod = this.validatePeriod(period);
+      const validPeriod = period ? this.validatePeriod(period) : undefined;
       const result = await this.analyticsService.getTopProjects(
         validLimit,
         validPeriod,
+        startDate,
+        endDate,
       );
       this.logger.log(
         `Successfully fetched ${result.topProjects.length} top projects`,

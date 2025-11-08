@@ -1,6 +1,6 @@
 "use client"
 
-import type { TimePeriod } from '@/types/analytics';
+import type { TimePeriod, CustomDateRange } from '@/types/analytics';
 
 /**
  * Convert Date to local date string (YYYY-MM-DD)
@@ -15,10 +15,21 @@ export function formatLocalDate(date: Date): string {
 
 /**
  * Calculate date range from time period using local timezone
- * @param period - Time period (today, week, month, all)
+ * @param period - Time period (today, week, month, all, custom)
+ * @param customRange - Custom date range for 'custom' period
  * @returns Date range with start and end dates in YYYY-MM-DD format
  */
-export function getDateRangeFromPeriod(period?: TimePeriod): { startDate: string; endDate: string } {
+export function getDateRangeFromPeriod(
+  period?: TimePeriod,
+  customRange?: CustomDateRange
+): { startDate: string; endDate: string } {
+  if (period === 'custom' && customRange?.startDate && customRange?.endDate) {
+    return {
+      startDate: formatLocalDate(customRange.startDate),
+      endDate: formatLocalDate(customRange.endDate),
+    };
+  }
+
   const endDate = new Date();
   const startDate = new Date();
 
@@ -38,6 +49,9 @@ export function getDateRangeFromPeriod(period?: TimePeriod): { startDate: string
     case 'all':
       // Far back enough for all records
       startDate.setFullYear(2000);
+      break;
+    case 'custom':
+      startDate.setDate(startDate.getDate() - 30);
       break;
     default:
       // Default to 30 days if no period specified

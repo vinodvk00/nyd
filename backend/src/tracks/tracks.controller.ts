@@ -57,10 +57,12 @@ export class TracksController {
   findByDateRange(
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
+    @Query('projectName') projectName?: string,
   ) {
     return this.tracksService.findByDateRange(
       new Date(startDate),
       new Date(endDate),
+      projectName,
     );
   }
 

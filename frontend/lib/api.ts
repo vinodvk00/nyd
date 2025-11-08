@@ -73,12 +73,14 @@ function buildQueryString(params: Record<string, string | number | undefined>): 
 
 /**
  * Get Summary Statistics
- * GET /tracks/stats/summary?period={period}
+ * GET /tracks/stats/summary?period={period}&startDate={date}&endDate={date}
  */
 export async function fetchSummaryStats(
-  period: TimePeriod = 'month'
+  period?: TimePeriod,
+  startDate?: string,
+  endDate?: string
 ): Promise<SummaryStats> {
-  const query = buildQueryString({ period });
+  const query = buildQueryString({ period, startDate, endDate });
   return fetchApi<SummaryStats>(`/tracks/stats/summary${query}`);
 }
 
@@ -121,25 +123,29 @@ export async function fetchHourlyPattern(
 
 /**
  * Get Trends
- * GET /tracks/stats/trends?metric={metric}&period={period}
+ * GET /tracks/stats/trends?metric={metric}&period={period}&startDate={date}&endDate={date}
  */
 export async function fetchTrends(
   metric: TrendMetric = 'hours',
-  period: TimePeriod = 'week'
+  period?: TimePeriod,
+  startDate?: string,
+  endDate?: string
 ): Promise<Trend> {
-  const query = buildQueryString({ metric, period });
+  const query = buildQueryString({ metric, period, startDate, endDate });
   return fetchApi<Trend>(`/tracks/stats/trends${query}`);
 }
 
 /**
  * Get Top Projects
- * GET /tracks/stats/top-projects?limit={limit}&period={period}
+ * GET /tracks/stats/top-projects?limit={limit}&period={period}&startDate={date}&endDate={date}
  */
 export async function fetchTopProjects(
   limit: number = 5,
-  period: TimePeriod = 'month'
+  period?: TimePeriod,
+  startDate?: string,
+  endDate?: string
 ): Promise<TopProjects> {
-  const query = buildQueryString({ limit, period });
+  const query = buildQueryString({ limit, period, startDate, endDate });
   return fetchApi<TopProjects>(`/tracks/stats/top-projects${query}`);
 }
 
@@ -176,6 +182,71 @@ export async function syncFromToggl(
 // ============================================================================
 // Utility Functions
 // ============================================================================
+
+/**
+ * Convert TimePeriod to date range
+ * Returns startDate and endDate in YYYY-MM-DD format
+ */
+export function periodToDateRange(period: TimePeriod, customRange?: { startDate: Date | null; endDate: Date | null }): {
+  startDate?: string;
+  endDate?: string;
+} {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  if (period === 'custom') {
+    if (customRange?.startDate && customRange?.endDate) {
+      return {
+        startDate: formatDateForApi(customRange.startDate),
+        endDate: formatDateForApi(customRange.endDate),
+      };
+    }
+
+    return {};
+  }
+
+  switch (period) {
+    case 'today':
+      return {
+        startDate: formatDateForApi(today),
+        endDate: formatDateForApi(today),
+      };
+
+    case 'week': {
+      const weekStart = new Date(today);
+      weekStart.setDate(today.getDate() - today.getDay()); 
+      return {
+        startDate: formatDateForApi(weekStart),
+        endDate: formatDateForApi(today),
+      };
+    }
+
+    case 'month': {
+      const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      return {
+        startDate: formatDateForApi(monthStart),
+        endDate: formatDateForApi(today),
+      };
+    }
+
+    case 'all':
+      // No date range for 'all'
+      return {};
+
+    default:
+      return {};
+  }
+}
+
+/**
+ * Format Date object to YYYY-MM-DD string
+ */
+export function formatDateForApi(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 /**
  * Get current API URL (useful for debugging)

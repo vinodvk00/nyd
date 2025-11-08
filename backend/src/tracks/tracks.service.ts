@@ -174,14 +174,19 @@ export class TracksService {
     });
   }
 
-  async findByDateRange(startDate: Date, endDate: Date) {
-    return await this.trackRepository
+  async findByDateRange(startDate: Date, endDate: Date, projectName?: string) {
+    const query = this.trackRepository
       .createQueryBuilder('track')
       .where('track.start >= :startDate AND track.start <= :endDate', {
         startDate,
         endDate,
-      })
-      .getMany();
+      });
+
+    if (projectName) {
+      query.andWhere('track.projectName = :projectName', { projectName });
+    }
+
+    return await query.getMany();
   }
 
   async findPaginated(page: number, limit: number) {

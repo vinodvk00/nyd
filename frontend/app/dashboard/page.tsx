@@ -11,23 +11,33 @@ import { HourlyPattern } from "./components/hourly-pattern"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Calendar } from "@/components/ui/calendar"
 import { syncFromToggl } from "@/lib/api"
-import type { TimePeriod } from "@/types/analytics"
+import { format } from "date-fns"
+import type { TimePeriod, CustomDateRange } from "@/types/analytics"
+import type { DateRange } from "react-day-picker"
 
-const VALID_PERIODS: TimePeriod[] = ['today', 'week', 'month', 'all']
+const VALID_PERIODS: TimePeriod[] = ['today', 'week', 'month', 'all', 'custom']
 const VALID_TABS = ['overview', 'projects', 'patterns']
 
 function DashboardContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [syncing, setSyncing] = useState(false)
+  const [showDatePicker, setShowDatePicker] = useState(false)
+  const [customRange, setCustomRange] = useState<CustomDateRange>({
+    startDate: null,
+    endDate: null
+  })
+  const [tempRange, setTempRange] = useState<DateRange | undefined>(undefined)
 
   const getPeriod = (): TimePeriod => {
     const urlPeriod = searchParams.get('period') as TimePeriod
     if (urlPeriod && VALID_PERIODS.includes(urlPeriod)) {
       return urlPeriod
     }
-    return 'month' 
+    return 'month'
   }
 
   const getActiveTab = (): string => {
@@ -35,11 +45,40 @@ function DashboardContent() {
     if (urlTab && VALID_TABS.includes(urlTab)) {
       return urlTab
     }
-    return 'overview' 
+    return 'overview'
+  }
+
+  const getCustomRangeFromUrl = (): CustomDateRange => {
+    const startDateStr = searchParams.get('startDate')
+    const endDateStr = searchParams.get('endDate')
+
+    if (startDateStr && endDateStr) {
+      return {
+        startDate: new Date(startDateStr),
+        endDate: new Date(endDateStr)
+      }
+    }
+    return { startDate: null, endDate: null }
   }
 
   const period = getPeriod()
   const activeTab = getActiveTab()
+
+  useEffect(() => {
+    const urlPeriod = searchParams.get('period')
+    const startDateStr = searchParams.get('startDate')
+    const endDateStr = searchParams.get('endDate')
+
+    if (urlPeriod === 'custom' && startDateStr && endDateStr) {
+      const newRange = {
+        startDate: new Date(startDateStr),
+        endDate: new Date(endDateStr)
+      }
+      setCustomRange(newRange)
+    } else if (urlPeriod !== 'custom') {
+      setCustomRange({ startDate: null, endDate: null })
+    }
+  }, [searchParams])
 
   useEffect(() => {
     const urlPeriod = searchParams.get('period')
@@ -55,6 +94,15 @@ function DashboardContent() {
       if (!urlPeriod && savedPeriod && VALID_PERIODS.includes(savedPeriod)) {
         params.set('period', savedPeriod)
         shouldUpdate = true
+
+        if (savedPeriod === 'custom') {
+          const savedStartDate = localStorage.getItem('customStartDate')
+          const savedEndDate = localStorage.getItem('customEndDate')
+          if (savedStartDate && savedEndDate) {
+            params.set('startDate', savedStartDate)
+            params.set('endDate', savedEndDate)
+          }
+        }
       } else if (!urlPeriod) {
         params.set('period', 'month')
         shouldUpdate = true
@@ -72,14 +120,63 @@ function DashboardContent() {
         router.replace(`?${params.toString()}`, { scroll: false })
       }
     }
-  }, []) 
+  }, [])
 
   const handlePeriodChange = (newPeriod: TimePeriod) => {
+    if (newPeriod === 'custom') {
+      openCustomDatePicker()
+      return
+    }
+
+    if (newPeriod !== period) {
+      const params = new URLSearchParams(searchParams.toString())
+      params.set('period', newPeriod)
+
+      params.delete('startDate')
+      params.delete('endDate')
+
+      router.push(`?${params.toString()}`, { scroll: false })
+      localStorage.setItem('lastPeriod', newPeriod)
+
+      localStorage.removeItem('customStartDate')
+      localStorage.removeItem('customEndDate')
+    }
+  }
+
+  const openCustomDatePicker = () => {
+    setTempRange(customRange.startDate && customRange.endDate ? {
+      from: customRange.startDate,
+      to: customRange.endDate
+    } : undefined)
+    setTimeout(() => setShowDatePicker(true), 0)
+  }
+
+  const handleApplyCustomRange = () => {
+    if (!tempRange?.from || !tempRange?.to) return
+
+    const newRange: CustomDateRange = {
+      startDate: tempRange.from,
+      endDate: tempRange.to
+    }
+
+    setCustomRange(newRange)
+    setShowDatePicker(false)
+
     const params = new URLSearchParams(searchParams.toString())
-    params.set('period', newPeriod)
+    params.set('period', 'custom')
+    params.set('startDate', format(tempRange.from, 'yyyy-MM-dd'))
+    params.set('endDate', format(tempRange.to, 'yyyy-MM-dd'))
+
     router.push(`?${params.toString()}`, { scroll: false })
 
-    localStorage.setItem('lastPeriod', newPeriod)
+    localStorage.setItem('lastPeriod', 'custom')
+    localStorage.setItem('customStartDate', format(tempRange.from, 'yyyy-MM-dd'))
+    localStorage.setItem('customEndDate', format(tempRange.to, 'yyyy-MM-dd'))
+  }
+
+  const handleCancelCustomRange = () => {
+    setShowDatePicker(false)
+    setTempRange(undefined)
   }
 
   const handleTabChange = (newTab: string) => {
@@ -119,6 +216,18 @@ function DashboardContent() {
     }
   }
 
+  const getPeriodDisplayText = () => {
+    if (period === 'custom' && customRange.startDate && customRange.endDate) {
+      return (
+        <div className="flex items-center gap-2">
+          <span>📅</span>
+          <span>{format(customRange.startDate, 'MMM dd')} - {format(customRange.endDate, 'MMM dd')}</span>
+        </div>
+      )
+    }
+    return undefined
+  }
+
   return (
     <div className="space-y-6">
       {/* Header Controls */}
@@ -126,14 +235,27 @@ function DashboardContent() {
         <div className="flex items-center gap-3">
           <div className="text-sm font-medium">Time Period:</div>
           <Select value={period} onValueChange={handlePeriodChange}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select period" />
+            <SelectTrigger className="w-60">
+              <SelectValue placeholder="Select period">
+                {getPeriodDisplayText()}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="today">Today</SelectItem>
               <SelectItem value="week">This Week</SelectItem>
               <SelectItem value="month">This Month</SelectItem>
               <SelectItem value="all">All Time</SelectItem>
+              <div className="h-px bg-border my-1" />
+              <div
+                className="relative flex w-full cursor-pointer items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none hover:bg-accent hover:text-accent-foreground"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  openCustomDatePicker()
+                }}
+              >
+                <span>📅</span>
+                <span>Custom Range...</span>
+              </div>
             </SelectContent>
           </Select>
         </div>
@@ -143,9 +265,52 @@ function DashboardContent() {
         </Button>
       </div>
 
+      {/* Date Range Picker Dialog */}
+      <Dialog open={showDatePicker} onOpenChange={setShowDatePicker}>
+        <DialogContent className="sm:max-w-[700px]">
+          <DialogHeader>
+            <DialogTitle>Select Custom Date Range</DialogTitle>
+            <DialogDescription>
+              Choose a start and end date for your custom time period
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex justify-center py-2">
+            <Calendar
+              mode="range"
+              selected={tempRange}
+              onSelect={setTempRange}
+              numberOfMonths={2}
+              disabled={(date) => date > new Date()}
+            />
+          </div>
+
+          {tempRange?.from && tempRange?.to && (
+            <div className="text-sm text-muted-foreground text-center pb-2">
+              <span className="font-medium">{format(tempRange.from, 'MMM dd, yyyy')} - {format(tempRange.to, 'MMM dd, yyyy')}</span>
+              <span className="ml-2 text-xs">
+                ({Math.ceil((tempRange.to.getTime() - tempRange.from.getTime()) / (1000 * 60 * 60 * 24)) + 1} days)
+              </span>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancelCustomRange}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleApplyCustomRange}
+              disabled={!tempRange?.from || !tempRange?.to}
+            >
+              Apply
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Summary Statistics */}
       <div className="transition-all duration-300">
-        <SummaryCards period={period} />
+        <SummaryCards period={period} customRange={customRange} />
       </div>
 
       {/* Main Dashboard Tabs */}
@@ -161,19 +326,19 @@ function DashboardContent() {
           {/* Overview Tab - Always mounted */}
           <div className={`space-y-6 ${activeTab === 'overview' ? 'block' : 'hidden'}`}>
             <div className="grid gap-6 lg:grid-cols-2">
-              <ActivityChart groupBy="day" period={period} />
-              <TopProjects limit={5} period={period} />
+              <ActivityChart groupBy="day" period={period} customRange={customRange} />
+              <TopProjects limit={5} period={period} customRange={customRange} />
             </div>
           </div>
 
           {/* Projects Tab - Always mounted */}
           <div className={`space-y-6 ${activeTab === 'projects' ? 'block' : 'hidden'}`}>
-            <ProjectBreakdown period={period} />
+            <ProjectBreakdown period={period} customRange={customRange} />
           </div>
 
           {/* Patterns Tab - Always mounted */}
           <div className={`space-y-6 ${activeTab === 'patterns' ? 'block' : 'hidden'}`}>
-            <HourlyPattern period={period} />
+            <HourlyPattern period={period} customRange={customRange} />
           </div>
         </div>
       </Tabs>

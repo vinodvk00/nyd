@@ -92,8 +92,22 @@ export class AnalyticsService {
   /**
    * Get summary statistics
    */
-  async getSummaryStats(period: TimePeriod = TimePeriod.MONTH) {
-    const { startDate, endDate } = this.getDateRange(period);
+  async getSummaryStats(
+    period?: TimePeriod,
+    startDateStr?: string,
+    endDateStr?: string,
+  ) {
+    let startDate: Date, endDate: Date;
+
+    if (startDateStr && endDateStr) {
+      const range = this.validateDateRange(startDateStr, endDateStr);
+      startDate = range.startDate;
+      endDate = range.endDate;
+    } else {
+      const range = this.getDateRange(period || TimePeriod.MONTH);
+      startDate = range.startDate;
+      endDate = range.endDate;
+    }
 
     const tracks = await this.trackRepository.find({
       where: {
@@ -119,7 +133,7 @@ export class AnalyticsService {
       totalSessions,
       averageSessionDuration: Math.round(averageSessionDuration * 100) / 100,
       activeProjects: uniqueProjects.size,
-      period,
+      period: period || 'custom',
     };
   }
 
@@ -240,10 +254,21 @@ export class AnalyticsService {
    */
   async getTrends(
     metric: TrendMetric = TrendMetric.HOURS,
-    period: TimePeriod = TimePeriod.WEEK,
+    period?: TimePeriod,
+    startDateStr?: string,
+    endDateStr?: string,
   ) {
-    const { startDate: currentStart, endDate: currentEnd } =
-      this.getDateRange(period);
+    let currentStart: Date, currentEnd: Date;
+
+    if (startDateStr && endDateStr) {
+      const range = this.validateDateRange(startDateStr, endDateStr);
+      currentStart = range.startDate;
+      currentEnd = range.endDate;
+    } else {
+      const range = this.getDateRange(period || TimePeriod.WEEK);
+      currentStart = range.startDate;
+      currentEnd = range.endDate;
+    }
 
     const periodLength = currentEnd.getTime() - currentStart.getTime();
     const previousStart = new Date(currentStart.getTime() - periodLength);
@@ -284,7 +309,7 @@ export class AnalyticsService {
       change,
       trend,
       metric,
-      period,
+      period: period || 'custom',
     };
   }
 
@@ -293,9 +318,21 @@ export class AnalyticsService {
    */
   async getTopProjects(
     limit: number = 5,
-    period: TimePeriod = TimePeriod.MONTH,
+    period?: TimePeriod,
+    startDateStr?: string,
+    endDateStr?: string,
   ) {
-    const { startDate, endDate } = this.getDateRange(period);
+    let startDate: Date, endDate: Date;
+
+    if (startDateStr && endDateStr) {
+      const range = this.validateDateRange(startDateStr, endDateStr);
+      startDate = range.startDate;
+      endDate = range.endDate;
+    } else {
+      const range = this.getDateRange(period || TimePeriod.MONTH);
+      startDate = range.startDate;
+      endDate = range.endDate;
+    }
 
     const resultWithProject = await this.trackRepository
       .createQueryBuilder('track')
@@ -344,7 +381,7 @@ export class AnalyticsService {
         rank: index + 1,
       }));
 
-      return { topProjects, period };
+      return { topProjects, period: period || 'custom' };
     }
 
     const topProjects = resultWithProject.map((r, index) => ({
@@ -354,6 +391,6 @@ export class AnalyticsService {
       rank: index + 1,
     }));
 
-    return { topProjects, period };
+    return { topProjects, period: period || 'custom' };
   }
 }

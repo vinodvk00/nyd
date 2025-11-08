@@ -10,24 +10,27 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarList } from "@tremor/react";
 import { useProjectBreakdown } from "@/lib/hooks";
-import type { TimePeriod } from "@/types/analytics";
+import type { TimePeriod, CustomDateRange } from "@/types/analytics";
 import Link from "next/link";
 
 interface ProjectBreakdownProps {
   startDate?: string;
   endDate?: string;
   period?: TimePeriod;
+  customRange?: CustomDateRange;
 }
 
 export function ProjectBreakdown({
   startDate,
   endDate,
   period,
+  customRange,
 }: ProjectBreakdownProps) {
   const { data, loading, error } = useProjectBreakdown(
     startDate,
     endDate,
-    period
+    period,
+    customRange
   );
 
   if (loading && !data) {

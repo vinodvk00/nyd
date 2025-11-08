@@ -4,16 +4,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton"
 import { BarChart } from "@tremor/react"
 import { useHourlyPattern } from "@/lib/hooks"
-import type { TimePeriod } from "@/types/analytics"
+import type { TimePeriod, CustomDateRange } from "@/types/analytics"
 
 interface HourlyPatternProps {
   startDate?: string;
   endDate?: string;
   period?: TimePeriod;
+  customRange?: CustomDateRange;
 }
 
-export function HourlyPattern({ startDate, endDate, period }: HourlyPatternProps) {
-  const { data, loading, error } = useHourlyPattern(startDate, endDate, period)
+export function HourlyPattern({ startDate, endDate, period, customRange }: HourlyPatternProps) {
+  const { data, loading, error } = useHourlyPattern(startDate, endDate, period, customRange)
 
   if (loading && !data) {
     return (

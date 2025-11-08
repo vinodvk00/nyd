@@ -3,15 +3,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useSummaryStats, useTrends } from "@/lib/hooks"
-import type { TimePeriod } from "@/types/analytics"
+import type { TimePeriod, CustomDateRange } from "@/types/analytics"
 
 interface SummaryCardsProps {
   period?: TimePeriod;
+  customRange?: CustomDateRange;
 }
 
-export function SummaryCards({ period = 'month' }: SummaryCardsProps) {
-  const { data: stats, loading: statsLoading, error: statsError } = useSummaryStats(period)
-  const { data: hoursTrend, loading: trendLoading } = useTrends('hours', period)
+export function SummaryCards({ period = 'month', customRange }: SummaryCardsProps) {
+  const { data: stats, loading: statsLoading, error: statsError } = useSummaryStats(period, customRange)
+  const { data: hoursTrend, loading: trendLoading } = useTrends('hours', period, customRange)
 
   if ((statsLoading || trendLoading) && !stats) {
     return (

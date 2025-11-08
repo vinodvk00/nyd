@@ -1,19 +1,36 @@
 "use client"
 
+import { useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
 import { useTopProjects } from "@/lib/hooks"
-import type { TimePeriod } from "@/types/analytics"
+import type { TimePeriod, CustomDateRange } from "@/types/analytics"
 import Link from "next/link"
 
 interface TopProjectsProps {
   limit?: number;
   period?: TimePeriod;
+  customRange?: CustomDateRange;
 }
 
-export function TopProjects({ limit = 5, period = 'month' }: TopProjectsProps) {
-  const { data, loading, error } = useTopProjects(limit, period)
+export function TopProjects({ limit = 5, period = 'month', customRange }: TopProjectsProps) {
+  const { data, loading, error } = useTopProjects(limit, period, customRange)
+  const searchParams = useSearchParams()
+
+  const buildProjectLink = (projectName: string) => {
+    const params = new URLSearchParams()
+    const startDate = searchParams.get('startDate')
+    const endDate = searchParams.get('endDate')
+
+    if (startDate && endDate) {
+      params.set('startDate', startDate)
+      params.set('endDate', endDate)
+    }
+
+    const queryString = params.toString()
+    return `/projects/${encodeURIComponent(projectName)}${queryString ? `?${queryString}` : ''}`
+  }
 
   if (loading && !data) {
     return (
@@ -63,6 +80,7 @@ export function TopProjects({ limit = 5, period = 'month' }: TopProjectsProps) {
       case 'week': return 'This Week'
       case 'month': return 'This Month'
       case 'all': return 'All Time'
+      case 'custom': return 'Custom Range'
       default: return 'This Month'
     }
   }
@@ -85,7 +103,7 @@ export function TopProjects({ limit = 5, period = 'month' }: TopProjectsProps) {
             {data.topProjects.map((project) => (
                   <Link
                     key={project.rank}
-                    href={`/projects/${encodeURIComponent(project.projectName)}`}
+                    href={buildProjectLink(project.projectName)}
                     className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-3">

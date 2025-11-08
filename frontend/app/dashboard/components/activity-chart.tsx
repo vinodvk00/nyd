@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton"
 import { AreaChart } from "@tremor/react"
 import { useActivityData } from "@/lib/hooks"
-import type { GroupBy, TimePeriod } from "@/types/analytics"
+import type { GroupBy, TimePeriod, CustomDateRange } from "@/types/analytics"
 import { format, parseISO } from "date-fns"
 
 interface ActivityChartProps {
@@ -12,10 +12,11 @@ interface ActivityChartProps {
   endDate?: string;
   groupBy?: GroupBy;
   period?: TimePeriod;
+  customRange?: CustomDateRange;
 }
 
-export function ActivityChart({ startDate, endDate, groupBy = 'day', period }: ActivityChartProps) {
-  const { data, loading, error } = useActivityData(startDate, endDate, groupBy, period)
+export function ActivityChart({ startDate, endDate, groupBy = 'day', period, customRange }: ActivityChartProps) {
+  const { data, loading, error } = useActivityData(startDate, endDate, groupBy, period, customRange)
 
   if (loading && !data) {
     return (

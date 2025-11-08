@@ -1,6 +1,6 @@
 "use client"
 
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import useSWR from 'swr'
 import { Track } from '@/types/analytics'
 import { ProjectDetailHeader } from './components/ProjectDetailHeader'
@@ -18,19 +18,31 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json())
 export default function ProjectDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const projectName = decodeURIComponent(params.projectName as string)
 
-  // Fetch tracks for this project
+  const startDate = searchParams.get('startDate')
+  const endDate = searchParams.get('endDate')
+
+  const buildApiUrl = () => {
+    const baseUrl = `${process.env.NEXT_PUBLIC_API_URL}/tracks`
+
+    if (startDate && endDate) {
+      return `${baseUrl}/date-range?startDate=${startDate}&endDate=${endDate}&projectName=${encodeURIComponent(projectName)}`
+    }
+
+    return `${baseUrl}/project/${encodeURIComponent(projectName)}`
+  }
+
   const { data: tracks, error, isLoading } = useSWR<Track[]>(
-    `${process.env.NEXT_PUBLIC_API_URL}/tracks/project/${encodeURIComponent(projectName)}`,
+    buildApiUrl(),
     fetcher,
     {
-      refreshInterval: 30000, // Refresh every 30 seconds
+      refreshInterval: 30000,
       revalidateOnFocus: true,
     }
   )
 
-  // Loading State
   if (isLoading) {
     return (
       <div className="container mx-auto p-6 space-y-6">
@@ -132,7 +144,7 @@ export default function ProjectDetailPage() {
       <ProjectDetailHeader projectName={projectName} tracks={tracks} />
 
       {/* Two Column Layout: Timeline (40%) + Insights (60%) */}
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(350px,_40%)_1fr] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(350px,40%)_1fr] gap-6">
         {/* Left: Daily Activity Timeline - Compact 40% */}
         <DailyActivityList tracks={tracks} />
 

@@ -3,10 +3,15 @@
  * These match the backend API schemas defined in backend/BACKEND_ANALYTICS_PLAN.md
  */
 
-export type TimePeriod = 'today' | 'week' | 'month' | 'all';
+export type TimePeriod = 'today' | 'week' | 'month' | 'all' | 'custom';
 export type GroupBy = 'day' | 'week' | 'month';
 export type TrendMetric = 'hours' | 'sessions';
 export type TrendDirection = 'up' | 'down' | 'stable';
+
+export interface CustomDateRange {
+  startDate: Date | null;
+  endDate: Date | null;
+}
 
 // Summary Statistics
 // GET /tracks/stats/summary?period={period}
