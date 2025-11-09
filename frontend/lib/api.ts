@@ -18,6 +18,16 @@ import type {
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 /**
+ * Get auth token from localStorage
+ */
+function getAuthToken(): string | null {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('auth_token');
+  }
+  return null;
+}
+
+/**
  * Base fetch wrapper with error handling
  */
 async function fetchApi<T>(
@@ -29,15 +39,30 @@ async function fetchApi<T>(
   try {
     console.log('Fetching:', url);
 
+    const token = getAuthToken();
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const response = await fetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       cache: 'no-store',
       ...options,
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+        }
+      }
+
       const errorData = await response.json().catch(() => ({
         message: 'An error occurred',
       }));
@@ -266,5 +291,67 @@ export async function checkApiHealth(): Promise<boolean> {
     return response.ok;
   } catch {
     return false;
+  }
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  user: {
+    id: number;
+    email: string;
+    name?: string;
+  };
+}
+
+export interface User {
+  id: number;
+  email: string;
+  name?: string;
+}
+
+/**
+ * Login user
+ * POST /auth/login
+ */
+export async function login(credentials: LoginCredentials): Promise<AuthResponse> {
+  const response = await fetch(`${API_URL}/auth/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(credentials),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({
+      message: 'Login failed',
+    }));
+    throw new Error(errorData.message || 'Login failed');
+  }
+
+  return response.json();
+}
+
+/**
+ * Get current user profile
+ * GET /auth/profile
+ */
+export async function getProfile(): Promise<User> {
+  return fetchApi<User>('/auth/profile');
+}
+
+/**
+ * Logout user (client-side only)
+ */
+export function logout(): void {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
   }
 }

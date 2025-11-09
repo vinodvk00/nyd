@@ -42,9 +42,9 @@ export function SummaryCards({ period = 'month', customRange }: SummaryCardsProp
   }
 
   const getTrendInfo = (trend: number) => {
-    if (trend > 0) return { color: 'text-green-600', symbol: '↑', text: 'increase' }
-    if (trend < 0) return { color: 'text-red-600', symbol: '↓', text: 'decrease' }
-    return { color: 'text-gray-600', symbol: '→', text: 'stable' }
+    if (trend > 0) return { color: 'text-green-600 dark:text-green-400', symbol: '↑', text: 'increase' }
+    if (trend < 0) return { color: 'text-red-600 dark:text-red-400', symbol: '↓', text: 'decrease' }
+    return { color: 'text-muted-foreground', symbol: '→', text: 'stable' }
   }
 
   const trendInfo = hoursTrend ? getTrendInfo(hoursTrend.change) : null

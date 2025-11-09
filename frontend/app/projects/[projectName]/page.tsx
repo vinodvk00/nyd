@@ -89,7 +89,7 @@ export default function ProjectDetailPage() {
           <CardContent className="pt-12 pb-12 text-center space-y-6">
             <div className="text-6xl">⚠️</div>
             <div className="space-y-2">
-              <h2 className="text-2xl font-bold text-red-600">Error Loading Project</h2>
+              <h2 className="text-2xl font-bold text-destructive">Error Loading Project</h2>
               <p className="text-muted-foreground">
                 {error.message || 'Failed to load project details. Please try again.'}
               </p>

@@ -5,6 +5,7 @@ import {
   HttpException,
   HttpStatus,
   Logger,
+  UseGuards,
 } from '@nestjs/common';
 import {
   AnalyticsService,
@@ -12,8 +13,10 @@ import {
   GroupBy,
   TrendMetric,
 } from './analytics.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('tracks/stats')
+@UseGuards(JwtAuthGuard)
 export class AnalyticsController {
   private readonly logger = new Logger(AnalyticsController.name);
 

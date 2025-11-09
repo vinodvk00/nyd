@@ -20,6 +20,11 @@ export default function Home() {
               View Dashboard
             </Link>
           </Button>
+          <Button asChild variant="default" size="lg">
+            <Link href="/audits">
+              Time Awareness Audit
+            </Link>
+          </Button>
           <Button asChild variant="outline" size="lg">
             <a
               href="https://github.com/anthropics/claude-code"
@@ -39,6 +44,7 @@ export default function Home() {
             <li>✓ Project breakdown analysis</li>
             <li>✓ Hourly productivity patterns</li>
             <li>✓ Top projects leaderboard</li>
+            <li>🆕 Time Awareness Audit (Eisenhower Matrix)</li>
           </ul>
         </div>
       </main>
