@@ -3,9 +3,36 @@
 import { useState } from 'react';
 import useSWR from 'swr';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import { Audit } from '@/types/audit';
+import { GlobalHeader } from '@/components/navigation/GlobalHeader';
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const fetcher = async (url: string) => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(url, { headers });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+    }
+    throw new Error('Failed to fetch audits');
+  }
+
+  return response.json();
+};
 
 export default function AuditsPage() {
   const { data: audits, error, mutate } = useSWR<Audit[]>(
@@ -25,9 +52,18 @@ export default function AuditsPage() {
     e.preventDefault();
 
     try {
+      const token = localStorage.getItem('auth_token');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/audits`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(formData),
       });
 
@@ -35,12 +71,13 @@ export default function AuditsPage() {
         setShowCreateForm(false);
         setFormData({ name: '', startDate: '', durationDays: 7, goal: '' });
         mutate();
+        toast.success('Audit created successfully!');
       } else {
         const error = await res.json();
-        alert(error.message || 'Failed to create audit');
+        toast.error(error.message || 'Failed to create audit');
       }
     } catch (err) {
-      alert('Failed to create audit');
+      toast.error('Failed to create audit. Please try again.');
     }
   };
 
@@ -50,9 +87,17 @@ export default function AuditsPage() {
   const activeAudit = audits.find((a) => a.status === 'active');
 
   return (
-    <div className="container mx-auto p-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Time Awareness Audits</h1>
+    <>
+      <GlobalHeader breadcrumbItems={[{ label: 'Audits' }]} />
+      <div className="container mx-auto p-8">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold mb-2">Time Awareness Audits</h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Track and analyze how you spend your time using the Eisenhower Matrix framework
+          </p>
+        </div>
+
+        <div className="flex justify-between items-center mb-8">
         {!activeAudit && (
           <button
             onClick={() => setShowCreateForm(true)}
@@ -70,11 +115,11 @@ export default function AuditsPage() {
             <div>
               <label className="block text-sm font-medium mb-1">Audit Name</label>
               <input
-                type="text"
+                type="text" 
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="w-full px-3 py-2 border rounded bg-white dark:bg-gray-800"
-                placeholder="e.g., November 2024 Time Audit"
+                placeholder="e.g., November 2025 Time Audit"
                 required
               />
             </div>
@@ -193,6 +238,7 @@ export default function AuditsPage() {
           <p className="text-gray-500 dark:text-gray-400 italic">No past audits yet</p>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }

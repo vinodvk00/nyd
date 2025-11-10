@@ -206,7 +206,7 @@ export function getWorkPatterns(tracks: Track[]): {
   tracks.forEach(track => {
     const date = new Date(track.start)
     const hour = date.getHours()
-    const dayName = date.toLocaleDateString('en-US', { weekday: 'long' })
+    const dayName = date.toLocaleDateString('en-US', { weekday: 'long' }) as keyof typeof daysOfWeek
     const hours = track.duration / 3600
 
     // Time block

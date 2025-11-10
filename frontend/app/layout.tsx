@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { SWRProvider } from "./swr-provider";
 import { AuthProvider } from "@/contexts/auth-context";
 import { ProtectedRoute } from "@/components/protected-route";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -30,6 +31,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
         <ThemeProvider
           attribute="class"
@@ -44,6 +46,7 @@ export default function RootLayout({
               </SWRProvider>
             </ProtectedRoute>
           </AuthProvider>
+          <Toaster position="top-right" />
         </ThemeProvider>
       </body>
     </html>

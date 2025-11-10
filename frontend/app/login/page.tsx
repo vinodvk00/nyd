@@ -30,7 +30,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
       <Card className="w-full max-w-md bg-gray-800 border-gray-700">
         <CardHeader>
           <CardTitle className="text-2xl text-center text-gray-100">Time Tracker Login</CardTitle>
