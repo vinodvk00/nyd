@@ -41,6 +41,8 @@ export default function LogPage({ params }: { params: Promise<{ id: string }> })
   const [selectedHour, setSelectedHour] = useState<number | null>(null);
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [showAllTemplates, setShowAllTemplates] = useState(false);
+  const [showDateNav, setShowDateNav] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
   const [formData, setFormData] = useState({
     activityDescription: '',
     isImportant: false,
@@ -174,6 +176,24 @@ export default function LogPage({ params }: { params: Promise<{ id: string }> })
     }
   };
 
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY < lastScrollY || currentScrollY < 50) {
+        setShowDateNav(true);
+      }
+      else if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setShowDateNav(false);
+      }
+
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
+
   // Keyboard shortcuts
   useEffect(() => {
     if (!audit) return;
@@ -231,11 +251,17 @@ export default function LogPage({ params }: { params: Promise<{ id: string }> })
         e.preventDefault();
         setSelectedDate(new Date().toISOString().split('T')[0]);
       }
+
+      // Press 'h' to toggle header visibility
+      if (e.key === 'h' || e.key === 'H') {
+        e.preventDefault();
+        setShowDateNav(!showDateNav);
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedHour, selectedDate, dayData, audit]);
+  }, [selectedHour, selectedDate, dayData, audit, showDateNav]);
 
   if (!audit || !dayData) return (
     <>
@@ -253,7 +279,6 @@ export default function LogPage({ params }: { params: Promise<{ id: string }> })
   const quadrantInfo = QUADRANT_INFO[quadrant];
   const isReadOnly = audit.status !== 'active';
 
-  // Helper function to format date for input[type="date"]
   const formatDateForInput = (date: string | Date) => {
     if (!date) return '';
     const dateObj = typeof date === 'string' ? new Date(date) : date;
@@ -262,38 +287,51 @@ export default function LogPage({ params }: { params: Promise<{ id: string }> })
 
   return (
     <>
-      <GlobalHeader breadcrumbItems={[
-        { label: 'Audits', href: '/audits' },
-        { label: audit.name, href: `/audits/${id}` },
-        { label: 'Log Time' }
-      ]} />
+      {/* Auto-hiding GlobalHeader */}
+      <div className={`fixed top-0 left-0 right-0 z-50 bg-background border-b transition-transform duration-300 ${
+        showDateNav ? 'translate-y-0' : '-translate-y-full'
+      }`}>
+        <GlobalHeader breadcrumbItems={[
+          { label: 'Audits', href: '/audits' },
+          { label: audit.name, href: `/audits/${id}` },
+          { label: 'Log Time' }
+        ]} />
+      </div>
+
+      {/* Spacer to prevent content jump */}
+      <div className={`transition-all duration-300 ${showDateNav ? 'h-16' : 'h-0'}`}></div>
+
       <div className="container mx-auto p-6 lg:p-8 max-w-7xl">
-      <div className="mb-6 pb-6 border-b">
-        <div className="flex items-center gap-3 mb-4">
-          <h1 className="text-2xl font-bold">{audit.name}</h1>
-          <span
-            className={`text-xs px-3 py-1 rounded-full font-medium ${
-              audit.status === 'active'
-                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-                : audit.status === 'completed'
-                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
-            }`}
-          >
-            {audit.status.toUpperCase()}
-          </span>
-        </div>
-
-        {isReadOnly && (
-          <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-            <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              This audit is {audit.status}. You can view the data but cannot make changes.
-            </p>
+      {/* Auto-hiding date navigation section */}
+      <div className={`sticky ${showDateNav ? 'top-16' : 'top-0'} z-20 bg-background transition-all duration-300 ${
+        showDateNav ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'
+      }`}>
+        <div className="mb-6 pb-6 border-b">
+          <div className="flex items-center gap-3 mb-4">
+            <h1 className="text-2xl font-bold">{audit.name}</h1>
+            <span
+              className={`text-xs px-3 py-1 rounded-full font-medium ${
+                audit.status === 'active'
+                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                  : audit.status === 'completed'
+                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                  : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+              }`}
+            >
+              {audit.status.toUpperCase()}
+            </span>
           </div>
-        )}
 
-        {/* Date Navigation */}
-        <div className="flex items-center gap-4 flex-wrap">
+          {isReadOnly && (
+            <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                This audit is {audit.status}. You can view the data but cannot make changes.
+              </p>
+            </div>
+          )}
+
+          {/* Date Navigation */}
+          <div className="flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
@@ -385,16 +423,33 @@ export default function LogPage({ params }: { params: Promise<{ id: string }> })
             </div>
           </div>
         )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative">
-        {/* Timeline */}
+      {/* Floating button to show header when hidden */}
+      {!showDateNav && (
+        <button
+          onClick={() => setShowDateNav(true)}
+          className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] px-4 py-2 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition text-sm font-medium flex items-center gap-2 animate-fade-in"
+          title="Press H to toggle"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+          Show Navigation
+        </button>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
+        {/* Timeline - Scrollable container on desktop */}
         <div className="lg:col-span-2">
-          <div className="flex items-center justify-between mb-4">
+          <div className={`flex items-center justify-between mb-4 lg:sticky lg:bg-background lg:pb-2 lg:z-10 transition-all duration-300 ${
+            showDateNav ? 'lg:top-24' : 'lg:top-2'
+          }`}>
             <h2 className="text-lg font-semibold">24-Hour Timeline</h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Click empty slot to log</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Scroll to see all hours</p>
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 lg:max-h-[calc(100vh-240px)] lg:overflow-y-auto lg:pr-2">
             {Array.from({ length: 24 }, (_, i) => {
               const entry = dayData.entries.find((e) => e.hourSlot === i);
               const quadrant = entry
@@ -493,7 +548,9 @@ export default function LogPage({ params }: { params: Promise<{ id: string }> })
             />
 
             {/* Form container - Modal on mobile, Sticky Sidebar on desktop */}
-            <div className="fixed inset-x-0 bottom-0 z-50 bg-background border-t-2 border-primary rounded-t-2xl max-h-[85vh] overflow-y-auto lg:static lg:border lg:rounded-lg lg:max-h-none lg:overflow-visible shadow-2xl lg:shadow-none lg:sticky lg:top-24">
+            <div className={`fixed inset-x-0 bottom-0 z-50 bg-background border-t-2 border-primary rounded-t-2xl max-h-[85vh] overflow-y-auto lg:static lg:border lg:rounded-lg lg:max-h-none lg:overflow-visible shadow-2xl lg:shadow-none lg:sticky transition-all duration-300 ${
+              showDateNav ? 'lg:top-24' : 'lg:top-2'
+            }`}>
               {/* Mobile drag handle indicator */}
               <div className="flex justify-center pt-3 pb-2 lg:hidden">
                 <div className="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
@@ -643,7 +700,9 @@ export default function LogPage({ params }: { params: Promise<{ id: string }> })
         {/* Desktop placeholder when no hour selected */}
         {selectedHour === null && (
           <div className="hidden lg:block">
-            <div className="sticky top-24 p-6 border rounded-lg bg-gray-50 dark:bg-gray-900/50">
+            <div className={`sticky p-6 border rounded-lg bg-gray-50 dark:bg-gray-900/50 transition-all duration-300 ${
+              showDateNav ? 'top-24' : 'top-2'
+            }`}>
               <div className="text-center">
                 <div className="text-4xl mb-4">⏱️</div>
                 <h3 className="text-lg font-semibold mb-2 text-gray-700 dark:text-gray-300">
@@ -668,6 +727,7 @@ export default function LogPage({ params }: { params: Promise<{ id: string }> })
                     <div className="mt-4 pt-4 border-t text-left">
                       <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Keyboard Shortcuts:</p>
                       <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                        <li><kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-800 rounded text-[10px]">H</kbd> Toggle header</li>
                         <li><kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-800 rounded text-[10px]">T</kbd> Go to today</li>
                         <li><kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-800 rounded text-[10px]">Ctrl</kbd> + <kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-800 rounded text-[10px]">←</kbd> Previous day</li>
                         <li><kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-800 rounded text-[10px]">Ctrl</kbd> + <kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-800 rounded text-[10px]">→</kbd> Next day</li>
