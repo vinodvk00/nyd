@@ -95,3 +95,7 @@ tmp/
 
 # png
 *.png
+
+# local only folder
+
+rainmeter/
