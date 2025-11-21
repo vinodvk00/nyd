@@ -33,7 +33,7 @@ export function TaskDistributionCard({ tracks }: TaskDistributionCardProps) {
       <CardContent>
         <BarList
           data={taskData}
-          valueFormatter={(value) => `${value}h`}
+          valueFormatter={(value: number) => `${value}h`}
           className="mt-2"
         />
       </CardContent>

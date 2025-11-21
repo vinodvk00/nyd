@@ -1,9 +1,14 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TracksModule } from './tracks/tracks.module';
+import { AuditModule } from './audit/audit.module';
+import { TimeEntryModule } from './time-entry/time-entry.module';
+import { ActivityTemplateModule } from './activity-template/activity-template.module';
+import { AuthModule } from './auth/auth.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ActivityTemplateService } from './activity-template/activity-template.service';
 
 @Module({
   imports: [
@@ -26,8 +31,20 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       inject: [ConfigService],
     }),
     TracksModule,
+    AuditModule,
+    TimeEntryModule,
+    ActivityTemplateModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements OnModuleInit {
+  constructor(
+    private readonly activityTemplateService: ActivityTemplateService,
+  ) {}
+
+  async onModuleInit() {
+    await this.activityTemplateService.seedDefaults();
+  }
+}

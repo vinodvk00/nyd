@@ -97,7 +97,7 @@ export function ProjectBreakdown({
                   >
                     <Link
                       href={`/projects/${encodeURIComponent(project.projectName)}`}
-                      className="font-medium truncate hover:text-blue-600 hover:underline cursor-pointer"
+                      className="font-medium truncate hover:text-primary hover:underline cursor-pointer transition-colors"
                     >
                       {project.projectName}
                     </Link>

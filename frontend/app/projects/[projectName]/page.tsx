@@ -13,7 +13,32 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json())
+const fetcher = async (url: string) => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(url, { headers });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+    }
+    throw new Error('Failed to fetch');
+  }
+
+  return response.json();
+}
 
 export default function ProjectDetailPage() {
   const params = useParams()
@@ -89,7 +114,7 @@ export default function ProjectDetailPage() {
           <CardContent className="pt-12 pb-12 text-center space-y-6">
             <div className="text-6xl">⚠️</div>
             <div className="space-y-2">
-              <h2 className="text-2xl font-bold text-red-600">Error Loading Project</h2>
+              <h2 className="text-2xl font-bold text-destructive">Error Loading Project</h2>
               <p className="text-muted-foreground">
                 {error.message || 'Failed to load project details. Please try again.'}
               </p>

@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SWRProvider } from "./swr-provider";
+import { AuthProvider } from "@/contexts/auth-context";
+import { ProtectedRoute } from "@/components/protected-route";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -28,6 +31,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
         <ThemeProvider
           attribute="class"
@@ -35,9 +39,14 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SWRProvider>
-            {children}
-          </SWRProvider>
+          <AuthProvider>
+            <ProtectedRoute>
+              <SWRProvider>
+                {children}
+              </SWRProvider>
+            </ProtectedRoute>
+          </AuthProvider>
+          <Toaster position="top-right" />
         </ThemeProvider>
       </body>
     </html>

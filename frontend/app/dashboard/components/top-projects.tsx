@@ -111,7 +111,7 @@ export function TopProjects({ limit = 5, period = 'month', customRange }: TopPro
                         {getMedalEmoji(project.rank)}
                       </div>
                       <div>
-                        <div className="font-medium hover:text-blue-600 hover:underline">{project.projectName}</div>
+                        <div className="font-medium hover:text-primary hover:underline transition-colors">{project.projectName}</div>
                         {project.projectId && (
                           <div className="text-xs text-muted-foreground">
                             Project ID: {project.projectId}
