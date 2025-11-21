@@ -1,0 +1,17 @@
+node_modules
+npm-debug.log
+dist
+.env
+.env.local
+.env.*.local
+.git
+.gitignore
+README.md
+.vscode
+.idea
+coverage
+*.md
+!CLAUDE.md
+!BACKEND_ANALYTICS_PLAN.md
+.DS_Store
+*.log
