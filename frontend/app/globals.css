@@ -256,5 +256,38 @@
   color: var(--muted-foreground) !important;
 }
 
+/* Custom Scrollbar Styles */
+.lg\:overflow-y-auto::-webkit-scrollbar {
+  width: 8px;
+}
 
+.lg\:overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
 
+.lg\:overflow-y-auto::-webkit-scrollbar-thumb {
+  background: oklch(0.7 0 0);
+  border-radius: 4px;
+}
+
+.lg\:overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.6 0 0);
+}
+
+.dark .lg\:overflow-y-auto::-webkit-scrollbar-thumb {
+  background: oklch(0.30 0.05 265);
+}
+
+.dark .lg\:overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.40 0.05 265);
+}
+
+/* Firefox scrollbar */
+.lg\:overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.7 0 0) transparent;
+}
+
+.dark .lg\:overflow-y-auto {
+  scrollbar-color: oklch(0.30 0.05 265) transparent;
+}
