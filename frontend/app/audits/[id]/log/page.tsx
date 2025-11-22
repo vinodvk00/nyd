@@ -3,7 +3,7 @@
 import { useState, use, useEffect } from 'react';
 import useSWR from 'swr';
 import { toast } from 'sonner';
-import { Audit, DayEntries, ActivityTemplate, getQuadrant, QUADRANT_INFO } from '@/types/audit';
+import { Audit, DayEntries, ActivityTemplate, getQuadrant, QUADRANT_INFO, getEntryTimeRange, getEntryStartTime, getEntryEndTime } from '@/types/audit';
 import { GlobalHeader } from '@/components/navigation/GlobalHeader';
 
 const fetcher = async (url: string) => {
@@ -41,8 +41,11 @@ export default function LogPage({ params }: { params: Promise<{ id: string }> })
   const [selectedHour, setSelectedHour] = useState<number | null>(null);
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [showAllTemplates, setShowAllTemplates] = useState(false);
+  const [selectedGap, setSelectedGap] = useState<{ startMinutes: number; endMinutes: number } | null>(null);
   const [formData, setFormData] = useState({
     activityDescription: '',
+    startMinute: 0,
+    durationMinutes: 60,
     isImportant: false,
     isUrgent: false,
     notes: '',
@@ -107,15 +110,15 @@ export default function LogPage({ params }: { params: Promise<{ id: string }> })
                 date: selectedDate,
                 hourSlot: selectedHour,
                 ...formData,
-                durationMinutes: 60,
               }
         ),
       });
 
       if (res.ok) {
         setSelectedHour(null);
+        setSelectedGap(null);
         setEditingEntryId(null);
-        setFormData({ activityDescription: '', isImportant: false, isUrgent: false, notes: '' });
+        setFormData({ activityDescription: '', startMinute: 0, durationMinutes: 60, isImportant: false, isUrgent: false, notes: '' });
         mutate(); // Refresh the day's data
         toast.success(`Entry ${editingEntryId ? 'updated' : 'logged'} successfully!`);
       } else {
@@ -129,10 +132,10 @@ export default function LogPage({ params }: { params: Promise<{ id: string }> })
 
   const useTemplate = (template: ActivityTemplate) => {
     setFormData({
+      ...formData,
       activityDescription: template.name,
       isImportant: template.isImportant,
       isUrgent: template.isUrgent,
-      notes: '',
     });
   };
 
@@ -141,6 +144,8 @@ export default function LogPage({ params }: { params: Promise<{ id: string }> })
     setEditingEntryId(entry.id);
     setFormData({
       activityDescription: entry.activityDescription,
+      startMinute: entry.startMinute || 0,
+      durationMinutes: entry.durationMinutes || 60,
       isImportant: entry.isImportant,
       isUrgent: entry.isUrgent,
       notes: entry.notes || '',
@@ -188,8 +193,9 @@ export default function LogPage({ params }: { params: Promise<{ id: string }> })
       // Escape to cancel selection
       if (e.key === 'Escape' && selectedHour !== null) {
         setSelectedHour(null);
+        setSelectedGap(null);
         setEditingEntryId(null);
-        setFormData({ activityDescription: '', isImportant: false, isUrgent: false, notes: '' });
+        setFormData({ activityDescription: '', startMinute: 0, durationMinutes: 60, isImportant: false, isUrgent: false, notes: '' });
         return;
       }
 
@@ -253,7 +259,75 @@ export default function LogPage({ params }: { params: Promise<{ id: string }> })
   const quadrantInfo = QUADRANT_INFO[quadrant];
   const isReadOnly = audit.status !== 'active';
 
-  // Helper function to format date for input[type="date"]
+  type TimeBlock =
+    | { type: 'entry'; entry: any }
+    | { type: 'gap'; startMinutes: number; endMinutes: number };
+
+  const buildTimeline = (entries: any[]): TimeBlock[] => {
+    if (!entries || entries.length === 0) {
+      return [{ type: 'gap', startMinutes: 0, endMinutes: 1440 }];
+    }
+
+    const sortedEntries = [...entries].sort((a, b) => {
+      const aStart = a.hourSlot * 60 + (a.startMinute || 0);
+      const bStart = b.hourSlot * 60 + (b.startMinute || 0);
+      return aStart - bStart;
+    });
+
+    const blocks: TimeBlock[] = [];
+    let currentMinute = 0;
+
+    for (const entry of sortedEntries) {
+      const entryStart = entry.hourSlot * 60 + (entry.startMinute || 0);
+      const entryEnd = entryStart + entry.durationMinutes;
+
+      if (currentMinute < entryStart) {
+        blocks.push({ type: 'gap', startMinutes: currentMinute, endMinutes: entryStart });
+      }
+
+      blocks.push({ type: 'entry', entry });
+
+      currentMinute = entryEnd;
+    }
+
+    if (currentMinute < 1440) {
+      blocks.push({ type: 'gap', startMinutes: currentMinute, endMinutes: 1440 });
+    }
+
+    return blocks;
+  };
+
+  const timelineBlocks = buildTimeline(dayData?.entries || []);
+
+  const calculateMaxDuration = (): number => {
+    if (selectedHour === null) return 1440;
+
+    const currentStartMinutes = selectedHour * 60 + formData.startMinute;
+
+    const minutesUntilEndOfDay = 1440 - currentStartMinutes;
+
+    if (selectedGap) {
+      const maxFromGap = selectedGap.endMinutes - currentStartMinutes;
+      return Math.min(maxFromGap, minutesUntilEndOfDay);
+    }
+
+    if (dayData?.entries) {
+      const entriesAfter = dayData.entries
+        .map(e => e.hourSlot * 60 + (e.startMinute || 0))
+        .filter(startMin => startMin > currentStartMinutes)
+        .sort((a, b) => a - b);
+
+      if (entriesAfter.length > 0) {
+        const nextEntryStart = entriesAfter[0];
+        return Math.min(nextEntryStart - currentStartMinutes, minutesUntilEndOfDay);
+      }
+    }
+
+    return minutesUntilEndOfDay;
+  };
+
+  const maxAllowedDuration = calculateMaxDuration();
+
   const formatDateForInput = (date: string | Date) => {
     if (!date) return '';
     const dateObj = typeof date === 'string' ? new Date(date) : date;
@@ -395,40 +469,36 @@ export default function LogPage({ params }: { params: Promise<{ id: string }> })
             <p className="text-xs text-gray-500 dark:text-gray-400">Click empty slot to log</p>
           </div>
           <div className="space-y-1.5">
-            {Array.from({ length: 24 }, (_, i) => {
-              const entry = dayData.entries.find((e) => e.hourSlot === i);
-              const quadrant = entry
-                ? getQuadrant(entry.isImportant, entry.isUrgent)
-                : null;
-              const info = quadrant ? QUADRANT_INFO[quadrant] : null;
+            {timelineBlocks.map((block, index) => {
+              if (block.type === 'entry') {
+                const entry = block.entry;
+                const quadrant = getQuadrant(entry.isImportant, entry.isUrgent);
+                const info = QUADRANT_INFO[quadrant];
 
-              return (
-                <div
-                  key={i}
-                  className={`p-3 border rounded-lg transition ${
-                    selectedHour === i
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-950 ring-2 ring-blue-200 dark:ring-blue-900'
-                      : entry
-                      ? quadrant === 1
+                return (
+                  <div
+                    key={`entry-${entry.id}`}
+                    className={`p-3 border rounded-lg transition ${
+                      quadrant === 1
                         ? 'border-red-300 bg-red-50 dark:bg-red-950/30 dark:border-red-800'
                         : quadrant === 2
                         ? 'border-blue-300 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-800'
                         : quadrant === 3
                         ? 'border-yellow-300 bg-yellow-50 dark:bg-yellow-950/30 dark:border-yellow-800'
                         : 'border-gray-300 bg-gray-50 dark:bg-gray-900/30 dark:border-gray-700'
-                      : isReadOnly
-                      ? 'border-gray-200 dark:border-gray-800'
-                      : 'hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer border-gray-200 dark:border-gray-800'
-                  }`}
-                  onClick={() => !entry && !isReadOnly && setSelectedHour(i)}
-                >
-                  <div className="flex justify-between items-start gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-1">
-                        <span className="font-mono text-sm font-semibold text-gray-700 dark:text-gray-300 min-w-[3rem]">
-                          {i.toString().padStart(2, '0')}:00
-                        </span>
-                        {entry && (
+                    }`}
+                  >
+                    <div className="flex justify-between items-start gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-1">
+                          <span className="font-mono text-sm font-semibold text-gray-700 dark:text-gray-300">
+                            {getEntryTimeRange(entry)}
+                          </span>
+                          {entry.durationMinutes !== 60 && (
+                            <span className="text-xs px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded">
+                              {entry.durationMinutes}m
+                            </span>
+                          )}
                           <span
                             className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                               quadrant === 1
@@ -442,39 +512,82 @@ export default function LogPage({ params }: { params: Promise<{ id: string }> })
                           >
                             {info?.label}
                           </span>
-                        )}
+                        </div>
+                        <p className="text-sm font-medium">{entry.activityDescription}</p>
                       </div>
-                      {entry ? (
-                        <p className="text-sm font-medium ml-14">{entry.activityDescription}</p>
-                      ) : (
-                        <span className="text-xs text-gray-400 dark:text-gray-500 ml-14 italic">Click to log activity</span>
+                      {!isReadOnly && (
+                        <div className="flex gap-1.5 shrink-0">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditEntry(entry);
+                            }}
+                            className="px-2.5 py-1 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteEntry(entry.id);
+                            }}
+                            className="px-2.5 py-1 text-xs bg-red-600 text-white rounded-md hover:bg-red-700 transition"
+                          >
+                            Del
+                          </button>
+                        </div>
                       )}
                     </div>
-                    {entry && !isReadOnly && (
-                      <div className="flex gap-1.5 shrink-0">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditEntry(entry);
-                          }}
-                          className="px-2.5 py-1 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteEntry(entry.id);
-                          }}
-                          className="px-2.5 py-1 text-xs bg-red-600 text-white rounded-md hover:bg-red-700 transition"
-                        >
-                          Del
-                        </button>
-                      </div>
-                    )}
                   </div>
-                </div>
-              );
+                );
+              } else {
+                const { startMinutes, endMinutes } = block;
+                const startHour = Math.floor(startMinutes / 60);
+                const startMinute = startMinutes % 60;
+                const endHour = Math.floor(endMinutes / 60);
+                const endMinute = endMinutes % 60;
+                const gapDuration = endMinutes - startMinutes;
+
+                const isSelected = selectedHour === startHour && formData.startMinute === startMinute;
+
+                return (
+                  <div
+                    key={`gap-${index}`}
+                    className={`p-3 border rounded-lg transition cursor-pointer ${
+                      isSelected
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-950 ring-2 ring-blue-200 dark:ring-blue-900'
+                        : isReadOnly
+                        ? 'border-gray-200 dark:border-gray-800'
+                        : 'hover:bg-gray-50 dark:hover:bg-gray-800 border-gray-200 dark:border-gray-800'
+                    }`}
+                    onClick={() => {
+                      if (!isReadOnly) {
+                        setSelectedHour(startHour);
+                        setSelectedGap({ startMinutes, endMinutes });
+                        setFormData(prev => ({
+                          ...prev,
+                          startMinute: startMinute,
+                          durationMinutes: Math.min(gapDuration, 60) // Default to max 60 mins or gap size
+                        }));
+                      }
+                    }}
+                  >
+                    <div className="flex justify-between items-start gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-1">
+                          <span className="font-mono text-sm font-semibold text-gray-700 dark:text-gray-300">
+                            {`${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')} - ${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`}
+                          </span>
+                          <span className="text-xs px-1.5 py-0.5 bg-green-200 dark:bg-green-900/50 text-green-800 dark:text-green-200 rounded">
+                            Available ({gapDuration}m)
+                          </span>
+                        </div>
+                        <span className="text-xs text-gray-400 dark:text-gray-500 italic">Click to log activity</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
             })}
           </div>
         </div>
@@ -487,36 +600,55 @@ export default function LogPage({ params }: { params: Promise<{ id: string }> })
               className="fixed inset-0 bg-black/50 z-40 lg:hidden"
               onClick={() => {
                 setSelectedHour(null);
+                setSelectedGap(null);
                 setEditingEntryId(null);
-                setFormData({ activityDescription: '', isImportant: false, isUrgent: false, notes: '' });
+                setFormData({ activityDescription: '', startMinute: 0, durationMinutes: 60, isImportant: false, isUrgent: false, notes: '' });
               }}
             />
 
             {/* Form container - Modal on mobile, Sticky Sidebar on desktop */}
-            <div className="fixed inset-x-0 bottom-0 z-50 bg-background border-t-2 border-primary rounded-t-2xl max-h-[85vh] overflow-y-auto lg:static lg:border lg:rounded-lg lg:max-h-none lg:overflow-visible shadow-2xl lg:shadow-none lg:sticky lg:top-24">
+            <div className="fixed inset-x-0 bottom-0 z-50 bg-background border-t-2 border-primary rounded-t-2xl max-h-[85vh] overflow-y-auto lg:border-t lg:border lg:border-border lg:rounded-lg lg:max-h-none lg:overflow-visible shadow-2xl lg:shadow-none lg:static lg:sticky lg:top-24 lg:z-10">
               {/* Mobile drag handle indicator */}
               <div className="flex justify-center pt-3 pb-2 lg:hidden">
                 <div className="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
               </div>
 
-              <div className="sticky top-0 bg-background border-b lg:border-b px-6 py-4 z-10">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold">
-                    {editingEntryId
-                      ? `Edit ${selectedHour.toString().padStart(2, '0')}:00`
-                      : `Log ${selectedHour.toString().padStart(2, '0')}:00`}
-                  </h2>
+              <div className="sticky top-0 bg-background py-4 z-10">
+                <div className="border-b pb-4 mx-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex flex-col gap-1">
+                    <h2 className="text-lg font-semibold">
+                      {editingEntryId
+                        ? `Edit Entry`
+                        : selectedGap
+                        ? (() => {
+                            const startH = Math.floor(selectedGap.startMinutes / 60);
+                            const startM = selectedGap.startMinutes % 60;
+                            const endH = Math.floor(selectedGap.endMinutes / 60);
+                            const endM = selectedGap.endMinutes % 60;
+                            return `Log ${startH.toString().padStart(2, '0')}:${startM.toString().padStart(2, '0')} - ${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`;
+                          })()
+                        : `Log Activity`}
+                    </h2>
+                    {!editingEntryId && selectedGap && (
+                      <p className="text-xs text-green-600 dark:text-green-400">
+                        {selectedGap.endMinutes - selectedGap.startMinutes} minutes available
+                      </p>
+                    )}
+                  </div>
                   <button
                     type="button"
                     onClick={() => {
                       setSelectedHour(null);
+                      setSelectedGap(null);
                       setEditingEntryId(null);
-                      setFormData({ activityDescription: '', isImportant: false, isUrgent: false, notes: '' });
+                      setFormData({ activityDescription: '', startMinute: 0, durationMinutes: 60, isImportant: false, isUrgent: false, notes: '' });
                     }}
                     className="lg:hidden text-2xl text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                   >
                     ✕
                   </button>
+                </div>
                 </div>
               </div>
 
@@ -552,6 +684,102 @@ export default function LogPage({ params }: { params: Promise<{ id: string }> })
                   </div>
                 </div>
 
+                {/* Time picker section */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Start Time</label>
+                    <div className="flex items-center gap-1">
+                      <select
+                        value={selectedHour ?? 0}
+                        onChange={(e) => setSelectedHour(parseInt(e.target.value))}
+                        className="px-2 py-2 border rounded-lg bg-white dark:bg-gray-800 text-sm font-mono"
+                      >
+                        {Array.from({ length: 24 }, (_, i) => (
+                          <option key={i} value={i}>{i.toString().padStart(2, '0')}</option>
+                        ))}
+                      </select>
+                      <span className="text-sm font-semibold">:</span>
+                      <select
+                        value={formData.startMinute}
+                        onChange={(e) => setFormData({ ...formData, startMinute: parseInt(e.target.value) })}
+                        className="flex-1 px-2 py-2 border rounded-lg bg-white dark:bg-gray-800 text-sm font-mono"
+                      >
+                        {Array.from({ length: 60 }, (_, i) => (
+                          <option key={i} value={i}>{i.toString().padStart(2, '0')}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">
+                      Duration
+                      <span className="ml-1 text-xs text-gray-500">(max: {maxAllowedDuration}m)</span>
+                    </label>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        value={formData.durationMinutes}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value) || 1;
+                          setFormData({ ...formData, durationMinutes: Math.min(val, maxAllowedDuration) });
+                        }}
+                        min="1"
+                        max={maxAllowedDuration}
+                        className={`w-full px-2 py-2 border rounded-lg bg-white dark:bg-gray-800 text-sm font-mono ${
+                          formData.durationMinutes > maxAllowedDuration
+                            ? 'border-red-500 bg-red-50 dark:bg-red-950/20'
+                            : ''
+                        }`}
+                      />
+                      <span className="text-xs text-gray-500 whitespace-nowrap">min</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick duration buttons */}
+                <div className="flex flex-wrap gap-2">
+                  <span className="text-xs text-gray-600 dark:text-gray-400 self-center">Quick:</span>
+                  {[15, 30, 45, 60, 90, 120]
+                    .filter(mins => mins <= maxAllowedDuration)
+                    .map(mins => (
+                      <button
+                        key={mins}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, durationMinutes: mins })}
+                        className={`px-2.5 py-1 text-xs border rounded-md transition ${
+                          formData.durationMinutes === mins
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700'
+                        }`}
+                      >
+                        {mins}m
+                      </button>
+                    ))}
+                  {maxAllowedDuration < 15 && (
+                    <span className="text-xs text-orange-600 dark:text-orange-400 self-center italic">
+                      Limited space available
+                    </span>
+                  )}
+                </div>
+
+                {/* Display end time */}
+                {selectedHour !== null && (
+                  <div className="p-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <p className="text-xs text-blue-900 dark:text-blue-200">
+                      <span className="font-semibold">Time Range:</span>{' '}
+                      {selectedHour.toString().padStart(2, '0')}:{formData.startMinute.toString().padStart(2, '0')} -{' '}
+                      {(() => {
+                        const totalMinutes = selectedHour * 60 + formData.startMinute + formData.durationMinutes;
+                        const endHour = Math.floor(totalMinutes / 60);
+                        const endMinute = totalMinutes % 60;
+                        return `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
+                      })()}
+                      {' '}({formData.durationMinutes} min)
+                    </p>
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Activity Description</label>
                   <input
@@ -561,7 +789,7 @@ export default function LogPage({ params }: { params: Promise<{ id: string }> })
                       setFormData({ ...formData, activityDescription: e.target.value })
                     }
                     className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 text-sm"
-                    placeholder="What did you do during this hour?"
+                    placeholder="What did you do during this time?"
                     required
                   />
                 </div>
@@ -627,7 +855,8 @@ export default function LogPage({ params }: { params: Promise<{ id: string }> })
                       onClick={() => {
                         setEditingEntryId(null);
                         setSelectedHour(null);
-                        setFormData({ activityDescription: '', isImportant: false, isUrgent: false, notes: '' });
+                        setSelectedGap(null);
+                        setFormData({ activityDescription: '', startMinute: 0, durationMinutes: 60, isImportant: false, isUrgent: false, notes: '' });
                       }}
                       className="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition"
                     >
@@ -643,7 +872,7 @@ export default function LogPage({ params }: { params: Promise<{ id: string }> })
         {/* Desktop placeholder when no hour selected */}
         {selectedHour === null && (
           <div className="hidden lg:block">
-            <div className="sticky top-24 p-6 border rounded-lg bg-gray-50 dark:bg-gray-900/50">
+            <div className="sticky top-24 z-10 p-6 border rounded-lg bg-gray-50 dark:bg-gray-900/50">
               <div className="text-center">
                 <div className="text-4xl mb-4">⏱️</div>
                 <h3 className="text-lg font-semibold mb-2 text-gray-700 dark:text-gray-300">

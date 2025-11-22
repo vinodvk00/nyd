@@ -10,6 +10,7 @@ class TimeEntryItemDto {
   isUrgent: boolean;
   templateId?: string;
   notes?: string;
+  startMinute: number;
 }
 
 export class BatchCreateEntriesDto {

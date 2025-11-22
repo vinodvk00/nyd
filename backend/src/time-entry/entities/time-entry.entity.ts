@@ -12,7 +12,6 @@ import { Audit } from '../../audit/entities/audit.entity';
 import { ActivityTemplate } from '../../activity-template/entities/activity-template.entity';
 
 @Entity('time_entries')
-@Index(['auditId', 'date', 'hourSlot'], { unique: true })
 @Index(['auditId', 'date'])
 @Index(['auditId', 'isImportant', 'isUrgent'])
 export class TimeEntry {
@@ -31,6 +30,9 @@ export class TimeEntry {
 
   @Column({ type: 'int' })
   hourSlot: number;
+
+  @Column({ type: 'int', default: 0 })
+  startMinute: number;
 
   @Column({ type: 'varchar', length: 255 })
   activityDescription: string;
@@ -67,5 +69,26 @@ export class TimeEntry {
     if (this.isImportant && !this.isUrgent) return 2;
     if (!this.isImportant && this.isUrgent) return 3;
     return 4;
+  }
+
+  get startTimeInMinutes(): number {
+    return this.hourSlot * 60 + (this.startMinute || 0);
+  }
+
+  get endTimeInMinutes(): number {
+    return this.startTimeInMinutes + this.durationMinutes;
+  }
+
+  get startTime(): string {
+    const hour = this.hourSlot.toString().padStart(2, '0');
+    const minute = (this.startMinute || 0).toString().padStart(2, '0');
+    return `${hour}:${minute}`;
+  }
+
+  get endTime(): string {
+    const totalMinutes = this.endTimeInMinutes;
+    const endHour = Math.floor(totalMinutes / 60);
+    const endMinute = totalMinutes % 60;
+    return `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
   }
 }
