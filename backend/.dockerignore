@@ -11,7 +11,5 @@ README.md
 .idea
 coverage
 *.md
-!CLAUDE.md
-!BACKEND_ANALYTICS_PLAN.md
 .DS_Store
 *.log

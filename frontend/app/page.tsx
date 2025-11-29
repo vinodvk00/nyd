@@ -27,7 +27,7 @@ export default function Home() {
           </Button>
           <Button asChild variant="outline" size="lg">
             <a
-              href="https://github.com/anthropics/claude-code"
+              href="https://nyd.life/"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -45,6 +45,7 @@ export default function Home() {
             <li>✓ Hourly productivity patterns</li>
             <li>✓ Top projects leaderboard</li>
             <li>🆕 Time Awareness Audit (Eisenhower Matrix)</li>
+            <li>🆕 Goal Progress Tracking (Tag-based)</li>
           </ul>
         </div>
       </main>

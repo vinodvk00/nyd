@@ -1,10 +1,16 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { BarChart } from "@tremor/react"
-import { useHourlyPattern } from "@/lib/hooks"
-import type { TimePeriod, CustomDateRange } from "@/types/analytics"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { BarChart } from "@tremor/react";
+import { useHourlyPattern } from "@/lib/hooks";
+import type { TimePeriod, CustomDateRange } from "@/types/analytics";
 
 interface HourlyPatternProps {
   startDate?: string;
@@ -13,8 +19,18 @@ interface HourlyPatternProps {
   customRange?: CustomDateRange;
 }
 
-export function HourlyPattern({ startDate, endDate, period, customRange }: HourlyPatternProps) {
-  const { data, loading, error } = useHourlyPattern(startDate, endDate, period, customRange)
+export function HourlyPattern({
+  startDate,
+  endDate,
+  period,
+  customRange,
+}: HourlyPatternProps) {
+  const { data, loading, error } = useHourlyPattern(
+    startDate,
+    endDate,
+    period,
+    customRange
+  );
 
   if (loading && !data) {
     return (
@@ -27,7 +43,7 @@ export function HourlyPattern({ startDate, endDate, period, customRange }: Hourl
           <Skeleton className="h-80 w-full" />
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (error || !data) {
@@ -42,30 +58,31 @@ export function HourlyPattern({ startDate, endDate, period, customRange }: Hourl
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   // Format hour in 12-hour format
   const formatHour = (hour: number) => {
-    if (hour === 0) return '12 AM'
-    if (hour === 12) return '12 PM'
-    if (hour < 12) return `${hour} AM`
-    return `${hour - 12} PM`
-  }
+    if (hour === 0) return "12 AM";
+    if (hour === 12) return "12 PM";
+    if (hour < 12) return `${hour} AM`;
+    return `${hour - 12} PM`;
+  };
 
   // Format data for Tremor chart
   const chartData = data.hourlyDistribution
     .sort((a, b) => a.hour - b.hour)
-    .map(item => ({
+    .map((item) => ({
       hour: formatHour(item.hour),
-      "Hours": item.totalHours,
-    }))
+      Hours: item.totalHours,
+    }));
 
-  const peakHour = data.hourlyDistribution.length > 0
-    ? data.hourlyDistribution.reduce((prev, current) =>
-        current.totalHours > prev.totalHours ? current : prev
-      )
-    : null
+  const peakHour =
+    data.hourlyDistribution.length > 0
+      ? data.hourlyDistribution.reduce((prev, current) =>
+          current.totalHours > prev.totalHours ? current : prev
+        )
+      : null;
 
   return (
     <Card>
@@ -75,7 +92,8 @@ export function HourlyPattern({ startDate, endDate, period, customRange }: Hourl
           When you work most during the day
           {peakHour && (
             <span className="block mt-1 text-primary font-medium">
-              Peak productivity: {formatHour(peakHour.hour)} ({peakHour.totalHours.toFixed(1)}h)
+              Peak productivity: {formatHour(peakHour.hour)} (
+              {peakHour.totalHours.toFixed(1)}h)
             </span>
           )}
         </CardDescription>
@@ -86,21 +104,23 @@ export function HourlyPattern({ startDate, endDate, period, customRange }: Hourl
             No hourly pattern data available
           </div>
         ) : (
-          <BarChart
-            className="h-80"
-            data={chartData}
-            index="hour"
-            categories={["Hours"]}
-            colors={["cyan"]}
-            valueFormatter={(value) => `${value.toFixed(1)}h`}
-            showLegend={false}
-            showGridLines={true}
-            yAxisWidth={48}
-            showXAxis={true}
-            showYAxis={true}
-          />
+          <div className="h-80 w-full">
+            <BarChart
+              className="h-full w-full"
+              data={chartData}
+              index="hour"
+              categories={["Hours"]}
+              colors={["cyan"]}
+              valueFormatter={(value) => `${value.toFixed(1)}h`}
+              showLegend={false}
+              showGridLines={true}
+              yAxisWidth={48}
+              showXAxis={true}
+              showYAxis={true}
+            />
+          </div>
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

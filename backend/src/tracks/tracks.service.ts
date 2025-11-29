@@ -375,6 +375,7 @@ export class TracksService {
               entry.duration && entry.duration > 0 ? entry.duration : undefined,
             projectId,
             projectName,
+            tags: entry.tags || [], // Sync tags from Toggl
           };
 
           if (existingTrack) {
