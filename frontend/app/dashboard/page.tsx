@@ -8,6 +8,7 @@ import { ActivityChart } from "./components/activity-chart"
 import { ProjectBreakdown } from "./components/project-breakdown"
 import { TopProjects } from "./components/top-projects"
 import { HourlyPattern } from "./components/hourly-pattern"
+import { GoalsManagement } from "./components/goals-management"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -19,7 +20,7 @@ import type { TimePeriod, CustomDateRange } from "@/types/analytics"
 import type { DateRange } from "react-day-picker"
 
 const VALID_PERIODS: TimePeriod[] = ['today', 'week', 'month', 'all', 'custom']
-const VALID_TABS = ['overview', 'projects', 'patterns']
+const VALID_TABS = ['overview', 'projects', 'patterns', 'processes']
 
 function DashboardContent() {
   const router = useRouter()
@@ -207,6 +208,11 @@ function DashboardContent() {
         { revalidate: true }
       )
 
+      // Also refresh process stats
+      if (typeof window !== 'undefined' && (window as any).__refreshProcessStats) {
+        (window as any).__refreshProcessStats()
+      }
+
       alert(message)
     } catch (error) {
       console.error('Sync failed:', error)
@@ -319,6 +325,7 @@ function DashboardContent() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="projects">Projects</TabsTrigger>
           <TabsTrigger value="patterns">Patterns</TabsTrigger>
+          <TabsTrigger value="processes">Goals</TabsTrigger>
         </TabsList>
 
         {/* Tab Content Container */}
@@ -339,6 +346,11 @@ function DashboardContent() {
           {/* Patterns Tab - Always mounted */}
           <div className={`space-y-6 ${activeTab === 'patterns' ? 'block' : 'hidden'}`}>
             <HourlyPattern period={period} customRange={customRange} />
+          </div>
+
+          {/* Progress Tab - Always mounted */}
+          <div className={`space-y-6 ${activeTab === 'processes' ? 'block' : 'hidden'}`}>
+            <GoalsManagement />
           </div>
         </div>
       </Tabs>

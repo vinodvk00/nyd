@@ -22,6 +22,12 @@ export class CreateTimeEntryDto {
   @Max(23)
   hourSlot: number;
 
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(59)
+  startMinute?: number;
+
   @IsString()
   @Length(1, 255)
   activityDescription: string;
@@ -29,7 +35,7 @@ export class CreateTimeEntryDto {
   @IsOptional()
   @IsInt()
   @Min(1)
-  @Max(60)
+  @Max(1440)
   durationMinutes?: number;
 
   @IsBoolean()

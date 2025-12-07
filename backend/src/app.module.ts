@@ -6,6 +6,7 @@ import { AuditModule } from './audit/audit.module';
 import { TimeEntryModule } from './time-entry/time-entry.module';
 import { ActivityTemplateModule } from './activity-template/activity-template.module';
 import { AuthModule } from './auth/auth.module';
+import { GoalsModule } from './goals/goals.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ActivityTemplateService } from './activity-template/activity-template.service';
@@ -35,6 +36,7 @@ import { ActivityTemplateService } from './activity-template/activity-template.s
     TimeEntryModule,
     ActivityTemplateModule,
     AuthModule,
+    GoalsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

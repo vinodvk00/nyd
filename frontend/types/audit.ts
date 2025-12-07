@@ -22,6 +22,7 @@ export interface TimeEntry {
   auditId: string;
   date: string;
   hourSlot: number;
+  startMinute: number;
   activityDescription: string;
   durationMinutes: number;
   isImportant: boolean;
@@ -66,3 +67,22 @@ export const QUADRANT_INFO = {
   3: { label: 'Q3: Interruption', color: 'yellow', description: 'Not Important + Urgent' },
   4: { label: 'Q4: Waste', color: 'gray', description: 'Not Important + Not Urgent' },
 };
+
+export function formatTime(hour: number, minute: number): string {
+  return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+}
+
+export function getEntryStartTime(entry: TimeEntry): string {
+  return formatTime(entry.hourSlot, entry.startMinute || 0);
+}
+
+export function getEntryEndTime(entry: TimeEntry): string {
+  const totalMinutes = entry.hourSlot * 60 + (entry.startMinute || 0) + entry.durationMinutes;
+  const endHour = Math.floor(totalMinutes / 60);
+  const endMinute = totalMinutes % 60;
+  return formatTime(endHour, endMinute);
+}
+
+export function getEntryTimeRange(entry: TimeEntry): string {
+  return `${getEntryStartTime(entry)} - ${getEntryEndTime(entry)}`;
+}

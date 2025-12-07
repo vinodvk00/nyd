@@ -108,24 +108,26 @@ export function ActivityChart({ startDate, endDate, groupBy = 'day', period, cus
             No activity data available for this period
           </div>
         ) : (
-          <AreaChart
-            className="h-80"
-            data={chartData}
-            index="date"
-            categories={["Hours"]}
-            colors={["cyan"]}
-            valueFormatter={(value) => `${value.toFixed(1)}h`}
-            showLegend={false}
-            showGridLines={true}
-            showXAxis={true}
-            showYAxis={true}
-            yAxisWidth={56}
-            curveType="monotone"
-            autoMinValue={false}
-            minValue={0}
-            allowDecimals={true}
-            connectNulls={true}
-          />
+          <div className="h-80 w-full">
+            <AreaChart
+              className="h-full w-full"
+              data={chartData}
+              index="date"
+              categories={["Hours"]}
+              colors={["cyan"]}
+              valueFormatter={(value) => `${value.toFixed(1)}h`}
+              showLegend={false}
+              showGridLines={true}
+              showXAxis={true}
+              showYAxis={true}
+              yAxisWidth={56}
+              curveType="monotone"
+              autoMinValue={false}
+              minValue={0}
+              allowDecimals={true}
+              connectNulls={true}
+            />
+          </div>
         )}
       </CardContent>
     </Card>

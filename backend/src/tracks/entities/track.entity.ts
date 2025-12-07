@@ -20,6 +20,9 @@ export class Track {
   @Column({ nullable: true })
   description: string;
 
+  @Column('simple-array', { nullable: true })
+  tags: string[];
+
   @Column({ type: 'timestamp' })
   start: Date;
 

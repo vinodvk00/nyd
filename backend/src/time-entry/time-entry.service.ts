@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { Repository } from 'typeorm';
 import { TimeEntry } from './entities/time-entry.entity';
 import { Audit, AuditStatus } from '../audit/entities/audit.entity';
 import { CreateTimeEntryDto } from './dto/create-time-entry.dto';
@@ -18,6 +18,46 @@ export class TimeEntryService {
     @InjectRepository(Audit)
     private auditRepository: Repository<Audit>,
   ) {}
+
+  /**
+   * Check if a new time entry overlaps with existing entries
+   */
+  private async checkOverlap(
+    auditId: string,
+    date: Date,
+    startHour: number,
+    startMinute: number,
+    durationMinutes: number,
+    excludeEntryId?: string,
+  ): Promise<{ hasOverlap: boolean; conflictingEntry?: TimeEntry }> {
+    const newStartTime = startHour * 60 + startMinute;
+    const newEndTime = newStartTime + durationMinutes;
+
+    if (newEndTime > 24 * 60) {
+      throw new BadRequestException(
+        'Activity extends beyond 24:00. Please split into multiple days.',
+      );
+    }
+
+    const entries = await this.timeEntryRepository.find({
+      where: { auditId, date },
+    });
+
+    for (const entry of entries) {
+      if (excludeEntryId && entry.id === excludeEntryId) {
+        continue;
+      }
+
+      const entryStartTime = entry.hourSlot * 60 + (entry.startMinute || 0);
+      const entryEndTime = entryStartTime + entry.durationMinutes;
+
+      if (newStartTime < entryEndTime && newEndTime > entryStartTime) {
+        return { hasOverlap: true, conflictingEntry: entry };
+      }
+    }
+
+    return { hasOverlap: false };
+  }
 
   async create(createTimeEntryDto: CreateTimeEntryDto): Promise<TimeEntry> {
     const audit = await this.auditRepository.findOne({
@@ -37,24 +77,28 @@ export class TimeEntryService {
       throw new BadRequestException('Date is outside audit date range');
     }
 
-    const existing = await this.timeEntryRepository.findOne({
-      where: {
-        auditId: createTimeEntryDto.auditId,
-        date: entryDate,
-        hourSlot: createTimeEntryDto.hourSlot,
-      },
-    });
+    const startMinute = createTimeEntryDto.startMinute || 0;
+    const durationMinutes = createTimeEntryDto.durationMinutes || 60;
 
-    if (existing) {
+    const { hasOverlap, conflictingEntry } = await this.checkOverlap(
+      createTimeEntryDto.auditId,
+      entryDate,
+      createTimeEntryDto.hourSlot,
+      startMinute,
+      durationMinutes,
+    );
+
+    if (hasOverlap && conflictingEntry) {
       throw new BadRequestException(
-        `Hour slot ${createTimeEntryDto.hourSlot} is already filled for this date`,
+        `Time slot overlaps with existing entry: ${conflictingEntry.activityDescription} (${conflictingEntry.startTime} - ${conflictingEntry.endTime})`,
       );
     }
 
     const entry = this.timeEntryRepository.create({
       ...createTimeEntryDto,
       date: entryDate,
-      durationMinutes: createTimeEntryDto.durationMinutes || 60,
+      startMinute,
+      durationMinutes,
     });
 
     return this.timeEntryRepository.save(entry);
@@ -83,18 +127,21 @@ export class TimeEntryService {
 
     for (const item of batchDto.entries) {
       try {
-        const existing = await this.timeEntryRepository.findOne({
-          where: {
-            auditId: batchDto.auditId,
-            date: entryDate,
-            hourSlot: item.hourSlot,
-          },
-        });
+        const startMinute = item.startMinute || 0;
+        const durationMinutes = item.durationMinutes || 60;
 
-        if (existing) {
+        const { hasOverlap, conflictingEntry } = await this.checkOverlap(
+          batchDto.auditId,
+          entryDate,
+          item.hourSlot,
+          startMinute,
+          durationMinutes,
+        );
+
+        if (hasOverlap && conflictingEntry) {
           errors.push({
             hourSlot: item.hourSlot,
-            error: 'Hour slot already filled',
+            error: `Overlaps with ${conflictingEntry.activityDescription} (${conflictingEntry.startTime} - ${conflictingEntry.endTime})`,
           });
           continue;
         }
@@ -103,7 +150,8 @@ export class TimeEntryService {
           auditId: batchDto.auditId,
           date: entryDate,
           ...item,
-          durationMinutes: item.durationMinutes || 60,
+          startMinute,
+          durationMinutes,
         });
 
         const saved = await this.timeEntryRepository.save(entry);
@@ -134,7 +182,7 @@ export class TimeEntryService {
         auditId,
         date: targetDate,
       },
-      order: { hourSlot: 'ASC' },
+      order: { hourSlot: 'ASC', startMinute: 'ASC' },
       relations: ['template'],
     });
 
@@ -177,6 +225,31 @@ export class TimeEntryService {
 
     if (entry.audit.status === AuditStatus.COMPLETED) {
       throw new BadRequestException('Cannot modify completed audit');
+    }
+
+    if (
+      updateDto.hourSlot !== undefined ||
+      updateDto.startMinute !== undefined ||
+      updateDto.durationMinutes !== undefined
+    ) {
+      const hourSlot = updateDto.hourSlot ?? entry.hourSlot;
+      const startMinute = updateDto.startMinute ?? entry.startMinute ?? 0;
+      const durationMinutes = updateDto.durationMinutes ?? entry.durationMinutes;
+
+      const { hasOverlap, conflictingEntry } = await this.checkOverlap(
+        entry.auditId,
+        entry.date,
+        hourSlot,
+        startMinute,
+        durationMinutes,
+        id,
+      );
+
+      if (hasOverlap && conflictingEntry) {
+        throw new BadRequestException(
+          `Updated time slot overlaps with existing entry: ${conflictingEntry.activityDescription} (${conflictingEntry.startTime} - ${conflictingEntry.endTime})`,
+        );
+      }
     }
 
     Object.assign(entry, updateDto);

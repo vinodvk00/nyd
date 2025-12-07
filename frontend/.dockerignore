@@ -10,7 +10,6 @@ README.md
 .vscode
 .idea
 *.md
-!CLAUDE.md
 !FRONTEND_ANALYTICS_PLAN.md
 .DS_Store
 *.log

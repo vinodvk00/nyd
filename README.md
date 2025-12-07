@@ -182,7 +182,6 @@ nyd/
 │   ├── .env                   # Environment variables (create this)
 │   ├── package.json
 │   ├── README.md             # Backend documentation
-│   ├── CLAUDE.md             # Backend implementation details
 │   └── BACKEND_ANALYTICS_PLAN.md  # API specifications
 │
 ├── frontend/                  # Next.js frontend application
@@ -198,10 +197,8 @@ nyd/
 │   ├── .npmrc                # NPM config for React 19 compatibility
 │   ├── package.json
 │   ├── README.md             # Frontend documentation
-│   ├── CLAUDE.md             # Frontend implementation details
 │   └── FRONTEND_ANALYTICS_PLAN.md  # Dashboard implementation plan
 │
-├── CLAUDE.md                  # Project overview and guidance
 └── README.md                  # This file
 ```
 
@@ -351,8 +348,6 @@ For detailed API documentation, see [backend/README.md](backend/README.md)
 
 - **[Backend README](backend/README.md)** - Complete API documentation, setup, and troubleshooting
 - **[Frontend README](frontend/README.md)** - UI/UX guide, component library usage, and styling
-- **[Backend Architecture](backend/CLAUDE.md)** - Implementation details and module structure
-- **[Frontend Architecture](frontend/CLAUDE.md)** - Component patterns and development practices
 - **[Backend API Plan](backend/BACKEND_ANALYTICS_PLAN.md)** - Analytics endpoints specification
 - **[Frontend Dashboard Plan](frontend/FRONTEND_ANALYTICS_PLAN.md)** - Dashboard implementation roadmap
 
