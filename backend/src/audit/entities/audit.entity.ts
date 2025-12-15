@@ -22,6 +22,12 @@ export class Audit {
   @Column({ type: 'varchar', length: 100 })
   name: string;
 
+  @Column({ type: 'int', nullable: true })
+  month: number;
+
+  @Column({ type: 'int', nullable: true })
+  year: number;
+
   @Column({ type: 'date' })
   startDate: Date;
 

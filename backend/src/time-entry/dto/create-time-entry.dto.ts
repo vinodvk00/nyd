@@ -11,8 +11,9 @@ import {
 } from 'class-validator';
 
 export class CreateTimeEntryDto {
+  @IsOptional()
   @IsUUID()
-  auditId: string;
+  auditId?: string;
 
   @IsDateString()
   date: string;

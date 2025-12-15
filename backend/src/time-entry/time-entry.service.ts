@@ -20,6 +20,55 @@ export class TimeEntryService {
   ) {}
 
   /**
+   * Get or create audit for a given date
+   * Auto-creates monthly audit if it doesn't exist
+   */
+  private async getOrCreateAuditForDate(date: Date): Promise<Audit> {
+    const month = date.getMonth() + 1;
+    const year = date.getFullYear();
+
+    let audit = await this.auditRepository.findOne({
+      where: { month, year },
+    });
+
+    if (!audit) {
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0);
+      const durationDays = endDate.getDate();
+
+      const monthNames = [
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December',
+      ];
+      const name = `${monthNames[month - 1]} ${year} Audit`;
+
+      audit = this.auditRepository.create({
+        name,
+        month,
+        year,
+        startDate,
+        endDate,
+        durationDays,
+        status: AuditStatus.ACTIVE,
+      });
+
+      audit = await this.auditRepository.save(audit);
+    }
+
+    return audit;
+  }
+
+  /**
    * Check if a new time entry overlaps with existing entries
    */
   private async checkOverlap(
@@ -60,22 +109,15 @@ export class TimeEntryService {
   }
 
   async create(createTimeEntryDto: CreateTimeEntryDto): Promise<TimeEntry> {
-    const audit = await this.auditRepository.findOne({
-      where: { id: createTimeEntryDto.auditId },
-    });
+    const entryDate = new Date(createTimeEntryDto.date);
 
-    if (!audit) {
-      throw new NotFoundException('Audit not found');
-    }
+    const audit = await this.getOrCreateAuditForDate(entryDate);
 
     if (audit.status === AuditStatus.COMPLETED) {
       throw new BadRequestException('Cannot modify completed audit');
     }
 
-    const entryDate = new Date(createTimeEntryDto.date);
-    if (entryDate < audit.startDate || entryDate > audit.endDate) {
-      throw new BadRequestException('Date is outside audit date range');
-    }
+    createTimeEntryDto.auditId = audit.id;
 
     const startMinute = createTimeEntryDto.startMinute || 0;
     const durationMinutes = createTimeEntryDto.durationMinutes || 60;
@@ -105,22 +147,15 @@ export class TimeEntryService {
   }
 
   async batchCreate(batchDto: BatchCreateEntriesDto) {
-    const audit = await this.auditRepository.findOne({
-      where: { id: batchDto.auditId },
-    });
+    const entryDate = new Date(batchDto.date);
 
-    if (!audit) {
-      throw new NotFoundException('Audit not found');
-    }
+    const audit = await this.getOrCreateAuditForDate(entryDate);
 
     if (audit.status === AuditStatus.COMPLETED) {
       throw new BadRequestException('Cannot modify completed audit');
     }
 
-    const entryDate = new Date(batchDto.date);
-    if (entryDate < audit.startDate || entryDate > audit.endDate) {
-      throw new BadRequestException('Date is outside audit date range');
-    }
+    batchDto.auditId = audit.id;
 
     const created: TimeEntry[] = [];
     const errors: Array<{ hourSlot: number; error: string }> = [];

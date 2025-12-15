@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, use, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
 import { toast } from "sonner";
 import {
@@ -49,8 +50,11 @@ export default function LogPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const searchParams = useSearchParams();
+  const dateParam = searchParams.get('date');
+
   const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
+    dateParam || new Date().toISOString().split("T")[0]
   );
   const [selectedHour, setSelectedHour] = useState<number | null>(null);
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);

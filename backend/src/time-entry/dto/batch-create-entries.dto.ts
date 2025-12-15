@@ -1,4 +1,4 @@
-import { IsUUID, IsDateString, IsArray, ValidateNested } from 'class-validator';
+import { IsUUID, IsDateString, IsArray, ValidateNested, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 import { CreateTimeEntryDto } from './create-time-entry.dto';
 
@@ -14,8 +14,9 @@ class TimeEntryItemDto {
 }
 
 export class BatchCreateEntriesDto {
+  @IsOptional()
   @IsUUID()
-  auditId: string;
+  auditId?: string;
 
   @IsDateString()
   date: string;

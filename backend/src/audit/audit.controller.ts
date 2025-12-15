@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { AuditService } from './audit.service';
 import { CreateAuditDto } from './dto/create-audit.dto';
+import { UpdateAuditDto } from './dto/update-audit.dto';
 import { AuditStatus } from './entities/audit.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -43,6 +44,11 @@ export class AuditController {
       ...audit,
       stats,
     };
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateAuditDto: UpdateAuditDto) {
+    return this.auditService.update(id, updateAuditDto);
   }
 
   @Patch(':id/complete')

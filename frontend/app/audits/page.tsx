@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { Audit } from '@/types/audit';
 import { GlobalHeader } from '@/components/navigation/GlobalHeader';
+import { LoggedDaysCalendar } from '@/components/audits/LoggedDaysCalendar';
 
 const fetcher = async (url: string) => {
   const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
@@ -40,11 +41,14 @@ export default function AuditsPage() {
     fetcher
   );
 
+
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingAudit, setEditingAudit] = useState<Audit | null>(null);
+  const now = new Date();
   const [formData, setFormData] = useState({
     name: '',
-    startDate: '',
-    durationDays: 7,
+    month: now.getMonth() + 1,
+    year: now.getFullYear(),
     goal: '',
   });
 
@@ -61,30 +65,45 @@ export default function AuditsPage() {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/audits`, {
-        method: 'POST',
+      const url = editingAudit
+        ? `${process.env.NEXT_PUBLIC_API_URL}/audits/${editingAudit.id}`
+        : `${process.env.NEXT_PUBLIC_API_URL}/audits`;
+
+      const res = await fetch(url, {
+        method: editingAudit ? 'PATCH' : 'POST',
         headers,
         body: JSON.stringify(formData),
       });
 
       if (res.ok) {
         setShowCreateForm(false);
-        setFormData({ name: '', startDate: '', durationDays: 7, goal: '' });
+        setEditingAudit(null);
+        const now = new Date();
+        setFormData({ name: '', month: now.getMonth() + 1, year: now.getFullYear(), goal: '' });
         mutate();
-        toast.success('Audit created successfully!');
+        toast.success(editingAudit ? 'Audit updated successfully!' : 'Audit created successfully!');
       } else {
         const error = await res.json();
-        toast.error(error.message || 'Failed to create audit');
+        toast.error(error.message || `Failed to ${editingAudit ? 'update' : 'create'} audit`);
       }
     } catch (err) {
-      toast.error('Failed to create audit. Please try again.');
+      toast.error(`Failed to ${editingAudit ? 'update' : 'create'} audit. Please try again.`);
     }
+  };
+
+  const handleEdit = (audit: Audit) => {
+    setEditingAudit(audit);
+    setFormData({
+      name: audit.name,
+      month: (audit as any).month || new Date(audit.startDate).getMonth() + 1,
+      year: (audit as any).year || new Date(audit.startDate).getFullYear(),
+      goal: audit.goal || '',
+    });
+    setShowCreateForm(true);
   };
 
   if (error) return <div className="p-8">Failed to load audits</div>;
   if (!audits) return <div className="p-8">Loading...</div>;
-
-  const activeAudit = audits.find((a) => a.status === 'active');
 
   return (
     <>
@@ -98,55 +117,91 @@ export default function AuditsPage() {
         </div>
 
         <div className="flex justify-between items-center mb-8">
-        {!activeAudit && (
           <button
             onClick={() => setShowCreateForm(true)}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600"
           >
-            Start New Audit
+            Create Audit for Different Month
           </button>
-        )}
-      </div>
+        </div>
 
       {showCreateForm && (
         <div className="mb-8 p-6 border rounded-lg bg-gray-50 dark:bg-gray-900">
-          <h2 className="text-xl font-semibold mb-4">Create New Audit</h2>
+          <h2 className="text-xl font-semibold mb-4">{editingAudit ? 'Edit Audit' : 'Create New Audit'}</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Audit Name</label>
+              <label className="block text-sm font-medium mb-1">
+                Audit Name (Optional)
+              </label>
               <input
-                type="text" 
+                type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="w-full px-3 py-2 border rounded bg-white dark:bg-gray-800"
-                placeholder="e.g., November 2025 Time Audit"
-                required
+                placeholder={`Auto-generated: ${new Date(formData.year, formData.month - 1).toLocaleDateString('en-US', { month: 'long' })} ${formData.year} Audit`}
               />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Leave empty to auto-generate based on month/year
+              </p>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-1">Start Date</label>
-              <input
-                type="date"
-                value={formData.startDate}
-                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                className="w-full px-3 py-2 border rounded bg-white dark:bg-gray-800"
-                required
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Month</label>
+                <select
+                  value={formData.month}
+                  onChange={(e) =>
+                    setFormData({ ...formData, month: parseInt(e.target.value) })
+                  }
+                  className="w-full px-3 py-2 border rounded bg-white dark:bg-gray-800"
+                  required
+                >
+                  <option value={1}>January</option>
+                  <option value={2}>February</option>
+                  <option value={3}>March</option>
+                  <option value={4}>April</option>
+                  <option value={5}>May</option>
+                  <option value={6}>June</option>
+                  <option value={7}>July</option>
+                  <option value={8}>August</option>
+                  <option value={9}>September</option>
+                  <option value={10}>October</option>
+                  <option value={11}>November</option>
+                  <option value={12}>December</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Year</label>
+                <select
+                  value={formData.year}
+                  onChange={(e) =>
+                    setFormData({ ...formData, year: parseInt(e.target.value) })
+                  }
+                  className="w-full px-3 py-2 border rounded bg-white dark:bg-gray-800"
+                  required
+                >
+                  {Array.from({ length: 5 }, (_, i) => {
+                    const year = new Date().getFullYear() - 2 + i;
+                    return (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-1">Duration</label>
-              <select
-                value={formData.durationDays}
-                onChange={(e) =>
-                  setFormData({ ...formData, durationDays: parseInt(e.target.value) })
-                }
-                className="w-full px-3 py-2 border rounded bg-white dark:bg-gray-800"
-              >
-                <option value={7}>7 days</option>
-                <option value={10}>10 days</option>
-              </select>
+            <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+              <p className="text-sm text-blue-900 dark:text-blue-200">
+                <span className="font-semibold">Audit Period:</span>{' '}
+                {new Date(formData.year, formData.month - 1, 1).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                {' - '}
+                {new Date(formData.year, formData.month, 0).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                {' '}
+                ({new Date(formData.year, formData.month, 0).getDate()} days)
+              </p>
             </div>
 
             <div>
@@ -165,11 +220,16 @@ export default function AuditsPage() {
                 type="submit"
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
-                Create Audit
+                {editingAudit ? 'Update Audit' : 'Create Audit'}
               </button>
               <button
                 type="button"
-                onClick={() => setShowCreateForm(false)}
+                onClick={() => {
+                  setShowCreateForm(false);
+                  setEditingAudit(null);
+                  const now = new Date();
+                  setFormData({ name: '', month: now.getMonth() + 1, year: now.getFullYear(), goal: '' });
+                }}
                 className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
               >
                 Cancel
@@ -179,63 +239,69 @@ export default function AuditsPage() {
         </div>
       )}
 
-      {activeAudit && (
-        <div className="mb-8 p-6 border-2 border-blue-500 rounded-lg bg-blue-50 dark:bg-blue-950/30">
-          <div className="flex justify-between items-start">
-            <div>
-              <h2 className="text-2xl font-semibold text-blue-900 dark:text-blue-100">{activeAudit.name}</h2>
-              <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                {new Date(activeAudit.startDate).toLocaleDateString()} - {new Date(activeAudit.endDate).toLocaleDateString()}
-              </p>
-              {activeAudit.goal && (
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 italic">{activeAudit.goal}</p>
-              )}
-            </div>
-            <Link
-              href={`/audits/${activeAudit.id}/log`}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700"
-            >
-              Log Time →
-            </Link>
-          </div>
-        </div>
-      )}
-
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Past Audits</h2>
-        {audits
-          .filter((a) => a.status !== 'active')
-          .map((audit) => (
-            <div key={audit.id} className="p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900">
-              <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold mb-4">All Audits</h2>
+        {audits.map((audit, index) => {
+          const isCurrentMonth = index === 0; // First audit is always current month (sorted desc)
+
+          return (
+            <div
+              key={audit.id}
+              className={`p-6 border rounded-lg ${
+                isCurrentMonth
+                  ? 'border-2 border-blue-500 bg-blue-50 dark:bg-blue-950/30'
+                  : ''
+              }`}
+            >
+              <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="font-semibold">{audit.name}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {new Date(audit.startDate).toLocaleDateString()} -{' '}
-                    {new Date(audit.endDate).toLocaleDateString()} ({audit.durationDays} days)
+                  <div className="flex items-center gap-3">
+                    <h3 className={`text-xl font-semibold ${isCurrentMonth ? 'text-blue-900 dark:text-blue-100' : ''}`}>
+                      {audit.name}
+                    </h3>
+                    {isCurrentMonth && (
+                      <span className="text-xs px-2 py-1 rounded bg-blue-600 text-white">
+                        Current Month
+                      </span>
+                    )}
+                    <button
+                      onClick={() => handleEdit(audit)}
+                      className="text-sm px-3 py-1 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 border border-gray-300 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                    >
+                      ✏️ Edit
+                    </button>
+                  </div>
+                  <p className={`text-sm mt-1 ${isCurrentMonth ? 'text-blue-700 dark:text-blue-300' : 'text-gray-600 dark:text-gray-400'}`}>
+                    {new Date(audit.startDate).toLocaleDateString()} - {new Date(audit.endDate).toLocaleDateString()} ({audit.durationDays} days)
                   </p>
-                  <span
-                    className={`text-xs px-2 py-1 rounded ${
-                      audit.status === 'completed'
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                        : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
-                    }`}
-                  >
-                    {audit.status}
-                  </span>
+                  {audit.goal && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 italic">{audit.goal}</p>
+                  )}
                 </div>
                 <Link
                   href={`/audits/${audit.id}/log`}
-                  className="text-blue-600 hover:underline dark:text-blue-400"
+                  className={`px-6 py-3 rounded-lg font-semibold transition ${
+                    isCurrentMonth
+                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+                  }`}
                 >
-                  View →
+                  {isCurrentMonth ? 'Log Time →' : 'View →'}
                 </Link>
               </div>
-            </div>
-          ))}
 
-        {audits.filter((a) => a.status !== 'active').length === 0 && (
-          <p className="text-gray-500 dark:text-gray-400 italic">No past audits yet</p>
+              {/* Show calendar for all audits */}
+              <LoggedDaysCalendar
+                auditId={audit.id}
+                startDate={audit.startDate}
+                endDate={audit.endDate}
+              />
+            </div>
+          );
+        })}
+
+        {audits.length === 0 && (
+          <p className="text-gray-500 dark:text-gray-400 italic">No audits yet. Start logging time to create your first audit!</p>
         )}
       </div>
       </div>

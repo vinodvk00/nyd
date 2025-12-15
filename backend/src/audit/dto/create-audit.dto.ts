@@ -1,15 +1,20 @@
-import { IsString, IsDateString, IsIn, IsOptional, Length } from 'class-validator';
+import { IsString, IsInt, IsOptional, Length, Min, Max } from 'class-validator';
 
 export class CreateAuditDto {
+  @IsOptional()
   @IsString()
   @Length(1, 100)
-  name: string;
+  name?: string;
 
-  @IsDateString()
-  startDate: string;
+  @IsInt()
+  @Min(1)
+  @Max(12)
+  month: number;
 
-  @IsIn([7, 10])
-  durationDays: number;
+  @IsInt()
+  @Min(2020)
+  @Max(2100)
+  year: number;
 
   @IsOptional()
   @IsString()

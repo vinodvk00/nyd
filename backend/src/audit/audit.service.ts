@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Audit, AuditStatus } from './entities/audit.entity';
 import { CreateAuditDto } from './dto/create-audit.dto';
+import { UpdateAuditDto } from './dto/update-audit.dto';
 
 @Injectable()
 export class AuditService {
@@ -27,25 +28,79 @@ export class AuditService {
       );
     }
 
-    const startDate = new Date(createAuditDto.startDate);
-    const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + createAuditDto.durationDays);
+    const existingAudit = await this.auditRepository.findOne({
+      where: {
+        month: createAuditDto.month,
+        year: createAuditDto.year,
+      },
+    });
+
+    if (existingAudit) {
+      throw new ConflictException(
+        `An audit for ${this.getMonthName(createAuditDto.month)} ${createAuditDto.year} already exists.`,
+      );
+    }
+
+    const startDate = new Date(createAuditDto.year, createAuditDto.month - 1, 1);
+    const endDate = new Date(createAuditDto.year, createAuditDto.month, 0); // Last day of month
+
+    const durationDays = endDate.getDate();
+
+    const name =
+      createAuditDto.name ||
+      `${this.getMonthName(createAuditDto.month)} ${createAuditDto.year} Audit`;
 
     const audit = this.auditRepository.create({
       ...createAuditDto,
+      name,
       startDate,
       endDate,
+      durationDays,
       status: AuditStatus.ACTIVE,
     });
 
     return this.auditRepository.save(audit);
   }
 
+  private getMonthName(month: number): string {
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    return months[month - 1];
+  }
+
   async findAll(status?: AuditStatus): Promise<Audit[]> {
     const where = status ? { status } : {};
-    return this.auditRepository.find({
+    const audits = await this.auditRepository.find({
       where,
-      order: { createdAt: 'DESC' },
+      order: {
+        startDate: 'DESC',
+      },
+    });
+
+    for (const audit of audits) {
+      if (audit.month === null || audit.year === null) {
+        const startDate = new Date(audit.startDate);
+        audit.month = startDate.getMonth() + 1;
+        audit.year = startDate.getFullYear();
+        await this.auditRepository.save(audit);
+      }
+    }
+
+    return audits.sort((a, b) => {
+      if (b.year !== a.year) return b.year - a.year;
+      return b.month - a.month;
     });
   }
 
@@ -67,6 +122,49 @@ export class AuditService {
     }
 
     return audit;
+  }
+
+  async update(id: string, updateAuditDto: UpdateAuditDto): Promise<Audit> {
+    const audit = await this.findOne(id);
+
+    if (updateAuditDto.month || updateAuditDto.year) {
+      const month = updateAuditDto.month ?? audit.month;
+      const year = updateAuditDto.year ?? audit.year;
+
+      const existingAudit = await this.auditRepository.findOne({
+        where: { month, year },
+      });
+
+      if (existingAudit && existingAudit.id !== id) {
+        throw new ConflictException(
+          `An audit for ${this.getMonthName(month)} ${year} already exists.`,
+        );
+      }
+
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0);
+      const durationDays = endDate.getDate();
+
+      const defaultName = `${this.getMonthName(audit.month)} ${audit.year} Audit`;
+      const newName =
+        audit.name === defaultName || !updateAuditDto.name
+          ? `${this.getMonthName(month)} ${year} Audit`
+          : updateAuditDto.name;
+
+      Object.assign(audit, {
+        ...updateAuditDto,
+        month,
+        year,
+        startDate,
+        endDate,
+        durationDays,
+        name: newName,
+      });
+    } else {
+      Object.assign(audit, updateAuditDto);
+    }
+
+    return this.auditRepository.save(audit);
   }
 
   async complete(id: string): Promise<Audit> {
