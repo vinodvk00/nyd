@@ -7,8 +7,9 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
+  checkAuth: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,28 +18,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    const savedUser = localStorage.getItem('user');
+  const checkAuth = async () => {
+    try {
+      const profile = await getProfile();
+      setUser(profile);
+    } catch (error) {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    if (token && savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (error) {
-        console.error('Failed to parse saved user:', error);
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user');
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      if (path === '/login' || path === '/register') {
+        setLoading(false);
+        return;
       }
     }
 
-    setLoading(false);
+    checkAuth();
   }, []);
 
   const login = async (credentials: LoginCredentials) => {
     try {
       const response = await apiLogin(credentials);
-      localStorage.setItem('auth_token', response.access_token);
-      localStorage.setItem('user', JSON.stringify(response.user));
       setUser(response.user);
     } catch (error) {
       console.error('Login failed:', error);
@@ -46,9 +51,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
     setUser(null);
-    apiLogout();
+    await apiLogout();
   };
 
   return (
@@ -59,6 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         logout,
         isAuthenticated: !!user,
+        checkAuth,
       }}
     >
       {children}

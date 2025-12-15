@@ -18,17 +18,7 @@ import type {
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 /**
- * Get auth token from localStorage
- */
-function getAuthToken(): string | null {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('auth_token');
-  }
-  return null;
-}
-
-/**
- * Base fetch wrapper with error handling
+ * Base fetch wrapper with error handling and cookie-based auth
  */
 async function fetchApi<T>(
   endpoint: string,
@@ -37,32 +27,48 @@ async function fetchApi<T>(
   const url = `${API_URL}${endpoint}`;
 
   try {
-    console.log('Fetching:', url);
-
-    const token = getAuthToken();
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
     };
 
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
     const response = await fetch(url, {
       headers,
       cache: 'no-store',
+      credentials: 'include', 
       ...options,
     });
 
-    if (!response.ok) {
-      if (response.status === 401) {
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('user');
-          window.location.href = '/login';
-        }
+    if (response.status === 401) {
+      if (typeof window !== 'undefined' && window.location.pathname === '/login') {
+        throw new Error('Authentication required');
       }
 
+      const refreshed = await refreshAccessToken();
+
+      if (refreshed) {
+        const retryResponse = await fetch(url, {
+          headers,
+          cache: 'no-store',
+          credentials: 'include',
+          ...options,
+        });
+
+        if (!retryResponse.ok) {
+          throw new Error(
+            `API Error: ${retryResponse.status} ${retryResponse.statusText}`
+          );
+        }
+
+        return await retryResponse.json();
+      } else {
+        if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+        throw new Error('Authentication required');
+      }
+    }
+
+    if (!response.ok) {
       const errorData = await response.json().catch(() => ({
         message: 'An error occurred',
       }));
@@ -78,6 +84,23 @@ async function fetchApi<T>(
       throw error;
     }
     throw new Error('An unexpected error occurred');
+  }
+}
+
+/**
+ * Refresh access token using refresh token
+ */
+async function refreshAccessToken(): Promise<boolean> {
+  try {
+    const response = await fetch(`${API_URL}/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+
+    return response.ok;
+  } catch (error) {
+    console.error('Token refresh failed:', error);
+    return false;
   }
 }
 
@@ -300,7 +323,6 @@ export interface LoginCredentials {
 }
 
 export interface AuthResponse {
-  access_token: string;
   user: {
     id: number;
     email: string;
@@ -317,6 +339,7 @@ export interface User {
 /**
  * Login user
  * POST /auth/login
+ * Sets HTTP-only cookies for access and refresh tokens
  */
 export async function login(credentials: LoginCredentials): Promise<AuthResponse> {
   const response = await fetch(`${API_URL}/auth/login`, {
@@ -324,6 +347,7 @@ export async function login(credentials: LoginCredentials): Promise<AuthResponse
     headers: {
       'Content-Type': 'application/json',
     },
+    credentials: 'include',
     body: JSON.stringify(credentials),
   });
 
@@ -346,12 +370,21 @@ export async function getProfile(): Promise<User> {
 }
 
 /**
- * Logout user (client-side only)
+ * Logout user
+ * POST /auth/logout
+ * Clears HTTP-only cookies and revokes refresh token
  */
-export function logout(): void {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user');
-    window.location.href = '/login';
+export async function logout(): Promise<void> {
+  try {
+    await fetch(`${API_URL}/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+  } catch (error) {
+    console.error('Logout error:', error);
+  } finally {
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
   }
 }
