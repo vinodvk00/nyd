@@ -10,23 +10,16 @@ import { AuditHeader } from '@/components/audits/AuditHeader';
 import { ViewToggle } from '@/components/audits/ViewToggle';
 
 const fetcher = async (url: string) => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-  };
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  const response = await fetch(url, { headers });
+  const response = await fetch(url, {
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
 
   if (!response.ok) {
     if (response.status === 401) {
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user');
         window.location.href = '/login';
       }
     }
@@ -50,16 +43,12 @@ export default function AuditPage({ params }: { params: Promise<{ id: string }> 
     if (!confirm('Mark this audit as complete?')) return;
 
     try {
-      const token = localStorage.getItem('auth_token');
-      const headers: HeadersInit = {};
-
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/audits/${id}/complete`, {
         method: 'PATCH',
-        headers,
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
 
       if (res.ok) {
@@ -78,16 +67,12 @@ export default function AuditPage({ params }: { params: Promise<{ id: string }> 
     if (!confirm('Abandon this audit? This cannot be undone.')) return;
 
     try {
-      const token = localStorage.getItem('auth_token');
-      const headers: HeadersInit = {};
-
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/audits/${id}/abandon`, {
         method: 'PATCH',
-        headers,
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
 
       if (res.ok) {
@@ -107,16 +92,12 @@ export default function AuditPage({ params }: { params: Promise<{ id: string }> 
     if (!confirm('Delete this audit permanently? This cannot be undone.')) return;
 
     try {
-      const token = localStorage.getItem('auth_token');
-      const headers: HeadersInit = {};
-
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/audits/${id}`, {
         method: 'DELETE',
-        headers,
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
 
       if (res.ok) {

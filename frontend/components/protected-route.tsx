@@ -9,8 +9,10 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
+  const publicRoutes = ['/login', '/register', '/'];
+
   useEffect(() => {
-    if (!loading && !isAuthenticated && pathname !== '/login') {
+    if (!loading && !isAuthenticated && !publicRoutes.includes(pathname)) {
       router.push('/login');
     }
   }, [isAuthenticated, loading, router, pathname]);
@@ -26,7 +28,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!isAuthenticated && pathname !== '/login') {
+  if (!isAuthenticated && !publicRoutes.includes(pathname)) {
     return null;
   }
 

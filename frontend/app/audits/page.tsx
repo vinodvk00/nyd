@@ -5,27 +5,19 @@ import useSWR from 'swr';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { Audit } from '@/types/audit';
-import { GlobalHeader } from '@/components/navigation/GlobalHeader';
 import { LoggedDaysCalendar } from '@/components/audits/LoggedDaysCalendar';
 
 const fetcher = async (url: string) => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-  };
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  const response = await fetch(url, { headers });
+  const response = await fetch(url, {
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
 
   if (!response.ok) {
     if (response.status === 401) {
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user');
         window.location.href = '/login';
       }
     }
@@ -56,22 +48,16 @@ export default function AuditsPage() {
     e.preventDefault();
 
     try {
-      const token = localStorage.getItem('auth_token');
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
-
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
       const url = editingAudit
         ? `${process.env.NEXT_PUBLIC_API_URL}/audits/${editingAudit.id}`
         : `${process.env.NEXT_PUBLIC_API_URL}/audits`;
 
       const res = await fetch(url, {
         method: editingAudit ? 'PATCH' : 'POST',
-        headers,
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(formData),
       });
 
@@ -106,9 +92,7 @@ export default function AuditsPage() {
   if (!audits) return <div className="p-8">Loading...</div>;
 
   return (
-    <>
-      <GlobalHeader breadcrumbItems={[{ label: 'Audits' }]} />
-      <div className="container mx-auto p-8">
+    <div className="container mx-auto p-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">Time Awareness Audits</h1>
           <p className="text-gray-600 dark:text-gray-400">
@@ -304,7 +288,6 @@ export default function AuditsPage() {
           <p className="text-gray-500 dark:text-gray-400 italic">No audits yet. Start logging time to create your first audit!</p>
         )}
       </div>
-      </div>
-    </>
+    </div>
   );
 }

@@ -12,15 +12,12 @@ interface LoggedDaysCalendarProps {
 }
 
 const fetcher = async (url: string) => {
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-  };
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-  const response = await fetch(url, { headers });
+  const response = await fetch(url, {
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
   if (!response.ok) throw new Error("Failed to fetch");
   return response.json();
 };

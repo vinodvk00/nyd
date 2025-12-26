@@ -17,24 +17,17 @@ import {
 import { GlobalHeader } from "@/components/navigation/GlobalHeader";
 
 const fetcher = async (url: string) => {
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
-
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-  };
-
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-
-  const response = await fetch(url, { headers });
+  const response = await fetch(url, {
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
 
   if (!response.ok) {
     if (response.status === 401) {
+      // Authentication failed, redirect to login
       if (typeof window !== "undefined") {
-        localStorage.removeItem("auth_token");
-        localStorage.removeItem("user");
         window.location.href = "/login";
       }
     }
@@ -160,22 +153,16 @@ export default function LogPage({
     if (selectedHour === null) return;
 
     try {
-      const token = localStorage.getItem("auth_token");
-      const headers: HeadersInit = {
-        "Content-Type": "application/json",
-      };
-
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-
       const url = editingEntryId
         ? `${process.env.NEXT_PUBLIC_API_URL}/time-entries/${editingEntryId}`
         : `${process.env.NEXT_PUBLIC_API_URL}/time-entries`;
 
       const res = await fetch(url, {
         method: editingEntryId ? "PATCH" : "POST",
-        headers,
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(
           editingEntryId
             ? formData
@@ -259,18 +246,14 @@ export default function LogPage({
     if (!confirm("Are you sure you want to delete this entry?")) return;
 
     try {
-      const token = localStorage.getItem("auth_token");
-      const headers: HeadersInit = {};
-
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/time-entries/${entryId}`,
         {
           method: "DELETE",
-          headers,
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
         }
       );
 

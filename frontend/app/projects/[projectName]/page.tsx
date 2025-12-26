@@ -14,23 +14,16 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 
 const fetcher = async (url: string) => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-  };
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  const response = await fetch(url, { headers });
+  const response = await fetch(url, {
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
 
   if (!response.ok) {
     if (response.status === 401) {
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user');
         window.location.href = '/login';
       }
     }
@@ -63,8 +56,9 @@ export default function ProjectDetailPage() {
     buildApiUrl(),
     fetcher,
     {
-      refreshInterval: 30000,
-      revalidateOnFocus: true,
+      refreshInterval: 0,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false, 
     }
   )
 
@@ -120,7 +114,7 @@ export default function ProjectDetailPage() {
               </p>
             </div>
             <div className="flex gap-3 justify-center">
-              <Button onClick={() => window.location.reload()}>
+              <Button onClick={() => router.refresh()}>
                 Try Again
               </Button>
               <Button variant="outline" onClick={() => router.push('/dashboard')}>
@@ -141,16 +135,13 @@ export default function ProjectDetailPage() {
           <CardContent className="pt-12 pb-12 text-center space-y-6">
             <div className="text-6xl">📊</div>
             <div className="space-y-2">
-              <h2 className="text-2xl font-bold">No data for &quot;{projectName}&quot;</h2>
+              <h2 className="text-2xl font-bold text-foreground">No data for &quot;{projectName}&quot;</h2>
               <p className="text-muted-foreground">
                 This project doesn&apos;t have any tracked time yet.
               </p>
             </div>
             <div className="flex gap-3 justify-center">
-              <Button onClick={() => {
-                // TODO: Implement sync functionality
-                window.location.reload()
-              }}>
+              <Button onClick={() => router.refresh()}>
                 Sync Data from Toggl
               </Button>
               <Button variant="outline" onClick={() => router.push('/dashboard')}>

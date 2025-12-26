@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { SWRProvider } from "./swr-provider";
 import { AuthProvider } from "@/contexts/auth-context";
 import { ProtectedRoute } from "@/components/protected-route";
+import { ConditionalAppShell } from "@/components/layout/ConditionalAppShell";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -42,7 +43,9 @@ export default function RootLayout({
           <AuthProvider>
             <ProtectedRoute>
               <SWRProvider>
-                {children}
+                <ConditionalAppShell>
+                  {children}
+                </ConditionalAppShell>
               </SWRProvider>
             </ProtectedRoute>
           </AuthProvider>

@@ -12,32 +12,38 @@ import type {
   UpdateGoalDto,
 } from "@/types/goals";
 
-function getAuthToken(): string | null {
-  if (typeof window !== "undefined") {
-    return localStorage.getItem("auth_token");
-  }
-  return null;
-}
-
 function getHeaders(): HeadersInit {
-  const headers: HeadersInit = {
+  return {
     "Content-Type": "application/json",
   };
-  const token = getAuthToken();
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
+}
+
+function getFetchOptions(method: string = 'GET', body?: any): RequestInit {
+  const options: RequestInit = {
+    method,
+    credentials: 'include',
+    headers: getHeaders(),
+  };
+  if (body) {
+    options.body = JSON.stringify(body);
   }
-  return headers;
+  return options;
 }
 
 // Area API
 export const areaApi = {
   async getAll(): Promise<Area[]> {
-    const res = await fetch(`${API_BASE_URL}/areas`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch areas");
-    return res.json();
+    try {
+      const res = await fetch(`${API_BASE_URL}/areas`, getFetchOptions());
+      if (!res.ok) {
+        if (res.status === 404 || res.status === 401) return [];
+        throw new Error("Failed to fetch areas");
+      }
+      return res.json();
+    } catch (error) {
+      console.warn('Areas API not available:', error);
+      return [];
+    }
   },
 
   async getOne(id: number): Promise<Area> {
@@ -203,11 +209,17 @@ export const goalApi = {
   },
 
   async getAllProgress(): Promise<GoalProgress[]> {
-    const res = await fetch(`${API_BASE_URL}/goals/progress`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch goal progress");
-    return res.json();
+    try {
+      const res = await fetch(`${API_BASE_URL}/goals/progress`, getFetchOptions());
+      if (!res.ok) {
+        if (res.status === 404 || res.status === 401) return [];
+        throw new Error("Failed to fetch goal progress");
+      }
+      return res.json();
+    } catch (error) {
+      console.warn('Goal progress API not available:', error);
+      return [];
+    }
   },
 
   async getProgress(id: number): Promise<GoalProgress> {
