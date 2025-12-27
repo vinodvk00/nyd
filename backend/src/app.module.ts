@@ -28,6 +28,14 @@ import { ActivityTemplateService } from './activity-template/activity-template.s
         database: configService.get('DB_DATABASE'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: true, // TODO: Set to false in production
+        retryAttempts: 10,
+        retryDelay: 3000,
+        autoLoadEntities: true,
+        keepConnectionAlive: true,
+        logging:
+          configService.get('NODE_ENV') === 'development'
+            ? ['error', 'warn']
+            : false,
       }),
       inject: [ConfigService],
     }),

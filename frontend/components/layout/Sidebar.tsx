@@ -141,13 +141,15 @@ export function Sidebar() {
             >
               <div className="flex items-center gap-2">
                 {/* Section Icon - shows with color when active */}
-                <section.icon
+                <span
                   className={cn(
-                    "h-4 w-4 transition-all duration-300",
+                    "transition-all duration-300 flex items-center",
                     activeSection === section.title ? "opacity-100 scale-100" : "opacity-0 scale-0"
                   )}
                   style={activeSection === section.title ? { color: section.color } : undefined}
-                />
+                >
+                  <section.icon className="h-4 w-4" />
+                </span>
 
                 {/* Section Label */}
                 <span
@@ -201,12 +203,12 @@ export function Sidebar() {
                           : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                       )}
                     >
-                      <Icon
-                        className={cn(
-                          "h-4 w-4 shrink-0 transition-all duration-300",
-                          isActive && "sidebar-icon-active-" + section.title.toLowerCase()
-                        )}
-                      />
+                      <span
+                        className="flex items-center"
+                        style={isActive ? { color: section.color } : undefined}
+                      >
+                        <Icon className="h-4 w-4 shrink-0 transition-all duration-300" />
+                      </span>
                       <span>{item.label}</span>
                     </Link>
                   );
