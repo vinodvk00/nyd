@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import { SidebarProvider } from '@/contexts/sidebar-context';
 import { AppShell } from './AppShell';
 
-const EXCLUDED_ROUTES = ['/login', '/register', '/'];
+const EXCLUDED_ROUTES = ['/login', '/register', '/', '/forgot-password', '/reset-password', '/auth/verify'];
 
 interface ConditionalAppShellProps {
   children: React.ReactNode;

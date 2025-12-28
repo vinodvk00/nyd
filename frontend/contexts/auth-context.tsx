@@ -88,7 +88,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname;
-      if (path === '/login' || path === '/register') {
+      const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password', '/auth/verify'];
+      if (publicPaths.some(p => path.startsWith(p))) {
         setLoading(false);
         return;
       }

@@ -9,7 +9,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const publicRoutes = ['/login', '/register', '/'];
+  const publicRoutes = ['/login', '/register', '/', '/forgot-password', '/reset-password', '/auth/verify'];
 
   useEffect(() => {
     if (!loading && !isAuthenticated && !publicRoutes.includes(pathname)) {
