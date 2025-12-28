@@ -20,6 +20,12 @@ export class User {
   @Column({ nullable: true })
   name: string;
 
+  @Column({ nullable: true, type: 'text' })
+  togglApiToken: string | null;
+
+  @Column({ nullable: true, type: 'varchar' })
+  togglWorkspaceId: string | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

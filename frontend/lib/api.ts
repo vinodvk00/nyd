@@ -388,3 +388,58 @@ export async function logout(): Promise<void> {
     }
   }
 }
+
+// ============================================================================
+// Profile API Functions
+// ============================================================================
+
+/**
+ * Update user profile
+ * PATCH /auth/profile
+ */
+export async function updateProfile(data: { name?: string }): Promise<User> {
+  return fetchApi<User>('/auth/profile', {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Change password
+ * POST /auth/change-password
+ */
+export async function changePassword(oldPassword: string, newPassword: string): Promise<{ message: string }> {
+  return fetchApi<{ message: string }>('/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ oldPassword, newPassword }),
+  });
+}
+
+/**
+ * Set Toggl API token
+ * POST /auth/toggl-token
+ */
+export async function setTogglToken(token: string, workspaceId: string): Promise<{ message: string }> {
+  return fetchApi<{ message: string }>('/auth/toggl-token', {
+    method: 'POST',
+    body: JSON.stringify({ token, workspaceId }),
+  });
+}
+
+/**
+ * Remove Toggl API token
+ * DELETE /auth/toggl-token
+ */
+export async function removeTogglToken(): Promise<{ message: string }> {
+  return fetchApi<{ message: string }>('/auth/toggl-token', {
+    method: 'DELETE',
+  });
+}
+
+/**
+ * Get Toggl token status
+ * GET /auth/toggl-token/status
+ */
+export async function getTogglTokenStatus(): Promise<{ hasToken: boolean; workspaceId: string | null }> {
+  return fetchApi<{ hasToken: boolean; workspaceId: string | null }>('/auth/toggl-token/status');
+}

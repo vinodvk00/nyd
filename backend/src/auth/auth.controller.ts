@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, UseGuards, Request, Res, Req, UnauthorizedException, Param } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Delete, Body, UseGuards, Request, Res, Req, UnauthorizedException, Param } from '@nestjs/common';
 import type { Response, Request as ExpressRequest } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -138,5 +138,47 @@ export class AuthController {
     });
 
     return { user: result.user };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('profile')
+  async updateProfile(@Request() req, @Body() body: { name?: string }) {
+    return this.authService.updateProfile(req.user.userId, body);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('change-password')
+  async changePassword(
+    @Request() req,
+    @Body() body: { oldPassword: string; newPassword: string },
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    await this.authService.changePassword(req.user.userId, body.oldPassword, body.newPassword);
+    res.clearCookie('access_token');
+    res.clearCookie('refresh_token');
+    return { message: 'Password changed successfully. Please log in again.' };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('toggl-token')
+  async setTogglToken(
+    @Request() req,
+    @Body() body: { token: string; workspaceId: string },
+  ) {
+    await this.authService.setTogglToken(req.user.userId, body.token, body.workspaceId);
+    return { message: 'Toggl token saved successfully' };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('toggl-token')
+  async removeTogglToken(@Request() req) {
+    await this.authService.removeTogglToken(req.user.userId);
+    return { message: 'Toggl token removed' };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('toggl-token/status')
+  async getTogglTokenStatus(@Request() req) {
+    return this.authService.getTogglTokenStatus(req.user.userId);
   }
 }

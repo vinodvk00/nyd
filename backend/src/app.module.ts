@@ -7,6 +7,7 @@ import { TimeEntryModule } from './time-entry/time-entry.module';
 import { ActivityTemplateModule } from './activity-template/activity-template.module';
 import { AuthModule } from './auth/auth.module';
 import { GoalsModule } from './goals/goals.module';
+import { CommonModule } from './common/common.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ActivityTemplateService } from './activity-template/activity-template.service';
@@ -33,7 +34,7 @@ async function createDataSourceWithRetry(
       logger.log(`Database connected after ${attempt} attempt(s)`);
       return dataSource;
     } catch (error) {
-      logger.warn(`DB connection attempt ${attempt} failed. Retrying in ${delayMs / 1000}s...`);
+      logger.warn(`DB connection attempt ${attempt} failed: ${error.message}. Retrying in ${delayMs / 1000}s...`);
       await new Promise((resolve) => setTimeout(resolve, delayMs));
       delayMs = Math.min(delayMs * DB_RETRY_CONFIG.multiplier, DB_RETRY_CONFIG.maxDelayMs);
     }
@@ -70,6 +71,7 @@ async function createDataSourceWithRetry(
         return createDataSourceWithRetry(options, logger);
       },
     }),
+    CommonModule,
     TracksModule,
     AuditModule,
     TimeEntryModule,

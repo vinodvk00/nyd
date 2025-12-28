@@ -2,11 +2,19 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Target, FileText, Clock, BarChart3, Folder, Plane, Wrench, ChevronDown, ChevronRight } from 'lucide-react';
+import { Target, FileText, Clock, BarChart3, Folder, Plane, Wrench, ChevronDown, ChevronRight, Settings, LogOut, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useSidebar } from '@/contexts/sidebar-context';
 import { useCurrentAudit } from '@/hooks/useCurrentAudit';
+import { useAuth } from '@/contexts/auth-context';
 import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const PILOT_COLOR = '#22c55e';   // green-500
 const PLANE_COLOR = '#3b82f6';   // blue-500
@@ -26,7 +34,46 @@ interface NavSection {
   defaultExpanded?: boolean;
 }
 
-// import './Sidebar.css';
+function UserSection({ onNavClick }: { onNavClick: () => void }) {
+  const { user, logout } = useAuth();
+
+  return (
+    <div className="border-t px-3 py-3">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className="w-full flex items-center gap-3 px-2 py-2 text-sm rounded-lg hover:bg-foreground/5 cursor-pointer transition-colors focus:outline-none">
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <User className="h-4 w-4 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0 text-left">
+              <p className="font-medium truncate">{user?.name || user?.email?.split('@')[0]}</p>
+              <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+            </div>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" side="top" className="w-56">
+          <DropdownMenuItem asChild className="cursor-pointer focus:bg-foreground/5">
+            <Link href="/settings" onClick={onNavClick}>
+              <Settings className="mr-2 h-4 w-4" />
+              Settings
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => {
+              onNavClick();
+              logout();
+            }}
+            className="text-destructive focus:text-destructive focus:bg-foreground/5 cursor-pointer"
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign out
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -131,7 +178,7 @@ export function Sidebar() {
         </Link>
 
         {/* Navigation Sections - Scrollable Content */}
-        <div className="flex-1 py-6 px-3 space-y-6 overflow-y-auto">
+        <div className="flex-1 py-6 px-3 space-y-6 overflow-y-auto min-h-0">
           {sections.map((section) => (
           <div key={section.title} className="space-y-2">
             {/* Section Header - Clickable to collapse/expand */}
@@ -218,6 +265,9 @@ export function Sidebar() {
           </div>
         ))}
         </div>
+
+        {/* User Section - Fixed at Bottom */}
+        <UserSection onNavClick={handleNavClick} />
       </nav>
     </aside>
   );

@@ -11,6 +11,9 @@ import { MagicLinkToken } from './entities/magic-link-token.entity';
 import { LoginDto } from './dto/login.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { MailService } from '../mail/mail.service';
+import { CryptoService } from '../common/crypto.service';
+import { ConfigService } from '@nestjs/config';
+import axios from 'axios';
 
 @Injectable()
 export class AuthService {
@@ -25,6 +28,8 @@ export class AuthService {
     private magicLinkTokenRepository: Repository<MagicLinkToken>,
     private jwtService: JwtService,
     private mailService: MailService,
+    private cryptoService: CryptoService,
+    private configService: ConfigService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
@@ -314,5 +319,88 @@ export class AuthService {
         name: user.name,
       },
     };
+  }
+
+  async updateProfile(userId: number, data: { name?: string }): Promise<{ id: number; email: string; name: string }> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    if (data.name !== undefined) {
+      user.name = data.name;
+    }
+
+    await this.userRepository.save(user);
+    return { id: user.id, email: user.email, name: user.name };
+  }
+
+  async changePassword(userId: number, oldPassword: string, newPassword: string): Promise<void> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const isValid = await bcrypt.compare(oldPassword, user.password);
+    if (!isValid) {
+      throw new BadRequestException('Current password is incorrect');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.userRepository.update(userId, { password: hashedPassword });
+    await this.revokeAllUserTokens(userId);
+  }
+
+  async setTogglToken(userId: number, token: string, workspaceId: string): Promise<void> {
+    const isValid = await this.validateTogglToken(token);
+    if (!isValid) {
+      throw new BadRequestException('Invalid Toggl API token');
+    }
+
+    const encryptedToken = this.cryptoService.encrypt(token);
+    await this.userRepository.update(userId, {
+      togglApiToken: encryptedToken,
+      togglWorkspaceId: workspaceId,
+    });
+  }
+
+  async removeTogglToken(userId: number): Promise<void> {
+    await this.userRepository.update(userId, {
+      togglApiToken: null,
+      togglWorkspaceId: null,
+    });
+  }
+
+  async getTogglTokenStatus(userId: number): Promise<{ hasToken: boolean; workspaceId: string | null }> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    return {
+      hasToken: !!user?.togglApiToken,
+      workspaceId: user?.togglWorkspaceId || null,
+    };
+  }
+
+  async getDecryptedTogglToken(userId: number): Promise<{ token: string; workspaceId: string } | null> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user?.togglApiToken || !user?.togglWorkspaceId) {
+      return null;
+    }
+
+    try {
+      const decryptedToken = this.cryptoService.decrypt(user.togglApiToken);
+      return { token: decryptedToken, workspaceId: user.togglWorkspaceId };
+    } catch {
+      return null;
+    }
+  }
+
+  private async validateTogglToken(token: string): Promise<boolean> {
+    try {
+      const response = await axios.get('https://api.track.toggl.com/api/v9/me', {
+        auth: { username: token, password: 'api_token' },
+      });
+      return response.status === 200;
+    } catch {
+      return false;
+    }
   }
 }
