@@ -22,6 +22,9 @@ export class Project {
   @OneToMany(() => Track, (track) => track.project)
   tracks: Track[];
 
+  @Column({ nullable: true })
+  userId: number;
+
   @CreateDateColumn()
   createdAt: Date;
 

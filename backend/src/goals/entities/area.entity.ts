@@ -27,6 +27,9 @@ export class Area {
   })
   categories: Category[];
 
+  @Column({ nullable: true })
+  userId: number;
+
   @CreateDateColumn()
   createdAt: Date;
 

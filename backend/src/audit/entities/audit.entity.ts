@@ -58,4 +58,7 @@ export class Audit {
 
   @Column({ type: 'timestamp', nullable: true })
   completedAt: Date;
+
+  @Column({ nullable: true })
+  userId: number;
 }

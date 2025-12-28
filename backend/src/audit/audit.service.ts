@@ -17,9 +17,9 @@ export class AuditService {
     private auditRepository: Repository<Audit>,
   ) {}
 
-  async create(createAuditDto: CreateAuditDto): Promise<Audit> {
+  async create(userId: number, createAuditDto: CreateAuditDto): Promise<Audit> {
     const activeAudit = await this.auditRepository.findOne({
-      where: { status: AuditStatus.ACTIVE },
+      where: { status: AuditStatus.ACTIVE, userId },
     });
 
     if (activeAudit) {
@@ -32,6 +32,7 @@ export class AuditService {
       where: {
         month: createAuditDto.month,
         year: createAuditDto.year,
+        userId,
       },
     });
 
@@ -57,6 +58,7 @@ export class AuditService {
       endDate,
       durationDays,
       status: AuditStatus.ACTIVE,
+      userId,
     });
 
     return this.auditRepository.save(audit);
@@ -80,8 +82,11 @@ export class AuditService {
     return months[month - 1];
   }
 
-  async findAll(status?: AuditStatus): Promise<Audit[]> {
-    const where = status ? { status } : {};
+  async findAll(userId: number, status?: AuditStatus): Promise<Audit[]> {
+    const where: any = { userId };
+    if (status) {
+      where.status = status;
+    }
     const audits = await this.auditRepository.find({
       where,
       order: {
@@ -104,16 +109,16 @@ export class AuditService {
     });
   }
 
-  async findActive(): Promise<Audit | null> {
+  async findActive(userId: number): Promise<Audit | null> {
     return this.auditRepository.findOne({
-      where: { status: AuditStatus.ACTIVE },
+      where: { status: AuditStatus.ACTIVE, userId },
       relations: ['entries'],
     });
   }
 
-  async findOne(id: string): Promise<Audit> {
+  async findOne(id: string, userId: number): Promise<Audit> {
     const audit = await this.auditRepository.findOne({
-      where: { id },
+      where: { id, userId },
       relations: ['entries'],
     });
 
@@ -124,15 +129,15 @@ export class AuditService {
     return audit;
   }
 
-  async update(id: string, updateAuditDto: UpdateAuditDto): Promise<Audit> {
-    const audit = await this.findOne(id);
+  async update(id: string, userId: number, updateAuditDto: UpdateAuditDto): Promise<Audit> {
+    const audit = await this.findOne(id, userId);
 
     if (updateAuditDto.month || updateAuditDto.year) {
       const month = updateAuditDto.month ?? audit.month;
       const year = updateAuditDto.year ?? audit.year;
 
       const existingAudit = await this.auditRepository.findOne({
-        where: { month, year },
+        where: { month, year, userId },
       });
 
       if (existingAudit && existingAudit.id !== id) {
@@ -167,8 +172,8 @@ export class AuditService {
     return this.auditRepository.save(audit);
   }
 
-  async complete(id: string): Promise<Audit> {
-    const audit = await this.findOne(id);
+  async complete(id: string, userId: number): Promise<Audit> {
+    const audit = await this.findOne(id, userId);
 
     if (audit.status !== AuditStatus.ACTIVE) {
       throw new BadRequestException('Only active audits can be completed');
@@ -195,8 +200,8 @@ export class AuditService {
     return this.auditRepository.save(audit);
   }
 
-  async abandon(id: string): Promise<Audit> {
-    const audit = await this.findOne(id);
+  async abandon(id: string, userId: number): Promise<Audit> {
+    const audit = await this.findOne(id, userId);
 
     if (audit.status !== AuditStatus.ACTIVE) {
       throw new BadRequestException('Only active audits can be abandoned');
@@ -207,8 +212,8 @@ export class AuditService {
     return this.auditRepository.save(audit);
   }
 
-  async remove(id: string): Promise<void> {
-    const audit = await this.findOne(id);
+  async remove(id: string, userId: number): Promise<void> {
+    const audit = await this.findOne(id, userId);
 
     if (audit.entries && audit.entries.length > 0) {
       throw new BadRequestException(
@@ -219,8 +224,8 @@ export class AuditService {
     await this.auditRepository.remove(audit);
   }
 
-  async getStats(id: string) {
-    const audit = await this.findOne(id);
+  async getStats(id: string, userId: number) {
+    const audit = await this.findOne(id, userId);
     const entries = audit.entries || [];
 
     const totalEntriesLogged = entries.length;

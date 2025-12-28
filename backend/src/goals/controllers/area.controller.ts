@@ -8,6 +8,7 @@ import {
   Delete,
   ParseIntPipe,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import { AreaService } from '../services/area.service';
 import { CreateAreaDto } from '../dto/create-area.dto';
@@ -20,30 +21,31 @@ export class AreaController {
   constructor(private readonly areaService: AreaService) {}
 
   @Post()
-  create(@Body() createAreaDto: CreateAreaDto) {
-    return this.areaService.create(createAreaDto);
+  create(@Request() req, @Body() createAreaDto: CreateAreaDto) {
+    return this.areaService.create(req.user.userId, createAreaDto);
   }
 
   @Get()
-  findAll() {
-    return this.areaService.findAll();
+  findAll(@Request() req) {
+    return this.areaService.findAll(req.user.userId);
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.areaService.findOne(id);
+  findOne(@Request() req, @Param('id', ParseIntPipe) id: number) {
+    return this.areaService.findOne(id, req.user.userId);
   }
 
   @Patch(':id')
   update(
+    @Request() req,
     @Param('id', ParseIntPipe) id: number,
     @Body() updateAreaDto: UpdateAreaDto,
   ) {
-    return this.areaService.update(id, updateAreaDto);
+    return this.areaService.update(id, req.user.userId, updateAreaDto);
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.areaService.remove(id);
+  remove(@Request() req, @Param('id', ParseIntPipe) id: number) {
+    return this.areaService.remove(id, req.user.userId);
   }
 }

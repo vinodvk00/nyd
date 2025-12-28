@@ -12,13 +12,14 @@ export class AreaService {
     private areaRepository: Repository<Area>,
   ) {}
 
-  async create(createAreaDto: CreateAreaDto): Promise<Area> {
-    const area = this.areaRepository.create(createAreaDto);
+  async create(userId: number, createAreaDto: CreateAreaDto): Promise<Area> {
+    const area = this.areaRepository.create({ ...createAreaDto, userId });
     return this.areaRepository.save(area);
   }
 
-  async findAll(): Promise<Area[]> {
+  async findAll(userId: number): Promise<Area[]> {
     return this.areaRepository.find({
+      where: { userId },
       relations: ['categories', 'categories.goals'],
       order: {
         order: 'ASC',
@@ -29,9 +30,9 @@ export class AreaService {
     });
   }
 
-  async findOne(id: number): Promise<Area> {
+  async findOne(id: number, userId: number): Promise<Area> {
     const area = await this.areaRepository.findOne({
-      where: { id },
+      where: { id, userId },
       relations: ['categories', 'categories.goals'],
     });
 
@@ -42,14 +43,14 @@ export class AreaService {
     return area;
   }
 
-  async update(id: number, updateAreaDto: UpdateAreaDto): Promise<Area> {
-    const area = await this.findOne(id);
+  async update(id: number, userId: number, updateAreaDto: UpdateAreaDto): Promise<Area> {
+    const area = await this.findOne(id, userId);
     Object.assign(area, updateAreaDto);
     return this.areaRepository.save(area);
   }
 
-  async remove(id: number): Promise<void> {
-    const area = await this.findOne(id);
+  async remove(id: number, userId: number): Promise<void> {
+    const area = await this.findOne(id, userId);
     await this.areaRepository.remove(area);
   }
 }

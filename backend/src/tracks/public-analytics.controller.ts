@@ -41,22 +41,31 @@ export class PublicAnalyticsController {
   }
 
   /**
-   * GET /public-stats/summary?apiKey=xxx&period=today|week|month|all
-   * GET /public-stats/summary?apiKey=xxx&startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+   * GET /public-stats/summary?apiKey=xxx&userId=xxx&period=today|week|month|all
+   * GET /public-stats/summary?apiKey=xxx&userId=xxx&startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
    * Get summary statistics for a given period or custom date range
    */
   @Get('summary')
   async getSummary(
     @Query('apiKey') apiKey: string,
+    @Query('userId') userId: string,
     @Query('period') period?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
     this.validateApiKey(apiKey);
 
+    if (!userId) {
+      throw new HttpException(
+        { statusCode: HttpStatus.BAD_REQUEST, message: 'userId is required' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     try {
       const validPeriod = this.validatePeriod(period);
       return await this.analyticsService.getSummaryStats(
+        parseInt(userId, 10),
         validPeriod,
         startDate,
         endDate,
@@ -74,13 +83,14 @@ export class PublicAnalyticsController {
   }
 
   /**
-   * GET /public-stats/top-projects?apiKey=xxx&limit=5&period=week|month|all
-   * GET /public-stats/top-projects?apiKey=xxx&limit=5&startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+   * GET /public-stats/top-projects?apiKey=xxx&userId=xxx&limit=5&period=week|month|all
+   * GET /public-stats/top-projects?apiKey=xxx&userId=xxx&limit=5&startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
    * Get top projects by time spent
    */
   @Get('top-projects')
   async getTopProjects(
     @Query('apiKey') apiKey: string,
+    @Query('userId') userId: string,
     @Query('limit') limit?: string,
     @Query('period') period?: string,
     @Query('startDate') startDate?: string,
@@ -88,10 +98,18 @@ export class PublicAnalyticsController {
   ) {
     this.validateApiKey(apiKey);
 
+    if (!userId) {
+      throw new HttpException(
+        { statusCode: HttpStatus.BAD_REQUEST, message: 'userId is required' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     try {
       const validLimit = limit ? parseInt(limit, 10) : 5;
       const validPeriod = this.validatePeriod(period);
       return await this.analyticsService.getTopProjects(
+        parseInt(userId, 10),
         validLimit,
         validPeriod,
         startDate,

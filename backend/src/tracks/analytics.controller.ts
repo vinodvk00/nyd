@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Logger,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import {
   AnalyticsService,
@@ -28,6 +29,7 @@ export class AnalyticsController {
    */
   @Get('summary')
   async getSummary(
+    @Request() req,
     @Query('period') period?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
@@ -35,6 +37,7 @@ export class AnalyticsController {
     try {
       const validPeriod = period ? this.validatePeriod(period) : undefined;
       return await this.analyticsService.getSummaryStats(
+        req.user.userId,
         validPeriod,
         startDate,
         endDate,
@@ -59,11 +62,13 @@ export class AnalyticsController {
    */
   @Get('by-project')
   async getByProject(
+    @Request() req,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
     try {
       return await this.analyticsService.getProjectBreakdown(
+        req.user.userId,
         startDate,
         endDate,
       );
@@ -87,6 +92,7 @@ export class AnalyticsController {
    */
   @Get('by-date')
   async getByDate(
+    @Request() req,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('groupBy') groupBy?: string,
@@ -94,6 +100,7 @@ export class AnalyticsController {
     try {
       const validGroupBy = this.validateGroupBy(groupBy);
       return await this.analyticsService.getActivityByDate(
+        req.user.userId,
         startDate,
         endDate,
         validGroupBy,
@@ -118,11 +125,12 @@ export class AnalyticsController {
    */
   @Get('hourly-pattern')
   async getHourlyPattern(
+    @Request() req,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
     try {
-      return await this.analyticsService.getHourlyPattern(startDate, endDate);
+      return await this.analyticsService.getHourlyPattern(req.user.userId, startDate, endDate);
     } catch (error) {
       throw new HttpException(
         {
@@ -143,6 +151,7 @@ export class AnalyticsController {
    */
   @Get('trends')
   async getTrends(
+    @Request() req,
     @Query('metric') metric?: string,
     @Query('period') period?: string,
     @Query('startDate') startDate?: string,
@@ -152,6 +161,7 @@ export class AnalyticsController {
       const validMetric = this.validateMetric(metric);
       const validPeriod = period ? this.validatePeriod(period) : undefined;
       return await this.analyticsService.getTrends(
+        req.user.userId,
         validMetric,
         validPeriod,
         startDate,
@@ -177,6 +187,7 @@ export class AnalyticsController {
    */
   @Get('top-projects')
   async getTopProjects(
+    @Request() req,
     @Query('limit') limit?: string,
     @Query('period') period?: string,
     @Query('startDate') startDate?: string,
@@ -189,6 +200,7 @@ export class AnalyticsController {
       const validLimit = limit ? parseInt(limit, 10) : 5;
       const validPeriod = period ? this.validatePeriod(period) : undefined;
       const result = await this.analyticsService.getTopProjects(
+        req.user.userId,
         validLimit,
         validPeriod,
         startDate,

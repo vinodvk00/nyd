@@ -93,6 +93,7 @@ export class AnalyticsService {
    * Get summary statistics
    */
   async getSummaryStats(
+    userId: number,
     period?: TimePeriod,
     startDateStr?: string,
     endDateStr?: string,
@@ -112,6 +113,7 @@ export class AnalyticsService {
     const tracks = await this.trackRepository.find({
       where: {
         start: Between(startDate, endDate),
+        userId,
       },
     });
 
@@ -140,7 +142,7 @@ export class AnalyticsService {
   /**
    * Get time breakdown by project
    */
-  async getProjectBreakdown(startDate?: string, endDate?: string) {
+  async getProjectBreakdown(userId: number, startDate?: string, endDate?: string) {
     const { startDate: start, endDate: end } = this.validateDateRange(
       startDate,
       endDate,
@@ -152,6 +154,7 @@ export class AnalyticsService {
       .addSelect('SUM(track.duration)', 'totalSeconds')
       .addSelect('COUNT(track.id)', 'sessionCount')
       .where('track.start BETWEEN :start AND :end', { start, end })
+      .andWhere('track.userId = :userId', { userId })
       .andWhere('track.projectName IS NOT NULL')
       .groupBy('track.projectName')
       .getRawMany();
@@ -180,6 +183,7 @@ export class AnalyticsService {
    * Get activity grouped by date
    */
   async getActivityByDate(
+    userId: number,
     startDate?: string,
     endDate?: string,
     groupBy: GroupBy = GroupBy.DAY,
@@ -208,6 +212,7 @@ export class AnalyticsService {
       .addSelect('SUM(track.duration)', 'totalSeconds')
       .addSelect('COUNT(track.id)', 'sessionCount')
       .where('track.start BETWEEN :start AND :end', { start, end })
+      .andWhere('track.userId = :userId', { userId })
       .groupBy('date')
       .orderBy('date', 'ASC')
       .getRawMany();
@@ -224,7 +229,7 @@ export class AnalyticsService {
   /**
    * Get hourly activity pattern
    */
-  async getHourlyPattern(startDate?: string, endDate?: string) {
+  async getHourlyPattern(userId: number, startDate?: string, endDate?: string) {
     const { startDate: start, endDate: end } = this.validateDateRange(
       startDate,
       endDate,
@@ -236,6 +241,7 @@ export class AnalyticsService {
       .addSelect('SUM(track.duration)', 'totalSeconds')
       .addSelect('COUNT(track.id)', 'sessionCount')
       .where('track.start BETWEEN :start AND :end', { start, end })
+      .andWhere('track.userId = :userId', { userId })
       .groupBy('hour')
       .orderBy('hour', 'ASC')
       .getRawMany();
@@ -253,6 +259,7 @@ export class AnalyticsService {
    * Get trends compared to previous period
    */
   async getTrends(
+    userId: number,
     metric: TrendMetric = TrendMetric.HOURS,
     period?: TimePeriod,
     startDateStr?: string,
@@ -275,11 +282,11 @@ export class AnalyticsService {
     const previousEnd = new Date(currentStart.getTime());
 
     const currentTracks = await this.trackRepository.find({
-      where: { start: Between(currentStart, currentEnd) },
+      where: { start: Between(currentStart, currentEnd), userId },
     });
 
     const previousTracks = await this.trackRepository.find({
-      where: { start: Between(previousStart, previousEnd) },
+      where: { start: Between(previousStart, previousEnd), userId },
     });
 
     let current: number, previous: number;
@@ -317,6 +324,7 @@ export class AnalyticsService {
    * Get top projects by time spent
    */
   async getTopProjects(
+    userId: number,
     limit: number = 5,
     period?: TimePeriod,
     startDateStr?: string,
@@ -345,6 +353,7 @@ export class AnalyticsService {
         start: startDate,
         end: endDate,
       })
+      .andWhere('track.userId = :userId', { userId })
       .andWhere('track.projectId IS NOT NULL')
       .andWhere('project.id IS NOT NULL')
       .andWhere('track.duration IS NOT NULL')
@@ -366,6 +375,7 @@ export class AnalyticsService {
           start: startDate,
           end: endDate,
         })
+        .andWhere('track.userId = :userId', { userId })
         .andWhere('track.projectName IS NOT NULL')
         .andWhere('track.duration IS NOT NULL')
         .groupBy('track.projectId')

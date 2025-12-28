@@ -8,6 +8,7 @@ import {
   Param,
   Query,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import { AuditService } from './audit.service';
 import { CreateAuditDto } from './dto/create-audit.dto';
@@ -21,24 +22,24 @@ export class AuditController {
   constructor(private readonly auditService: AuditService) {}
 
   @Post()
-  create(@Body() createAuditDto: CreateAuditDto) {
-    return this.auditService.create(createAuditDto);
+  create(@Request() req, @Body() createAuditDto: CreateAuditDto) {
+    return this.auditService.create(req.user.userId, createAuditDto);
   }
 
   @Get()
-  findAll(@Query('status') status?: AuditStatus) {
-    return this.auditService.findAll(status);
+  findAll(@Request() req, @Query('status') status?: AuditStatus) {
+    return this.auditService.findAll(req.user.userId, status);
   }
 
   @Get('active')
-  findActive() {
-    return this.auditService.findActive();
+  findActive(@Request() req) {
+    return this.auditService.findActive(req.user.userId);
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const audit = await this.auditService.findOne(id);
-    const stats = await this.auditService.getStats(id);
+  async findOne(@Request() req, @Param('id') id: string) {
+    const audit = await this.auditService.findOne(id, req.user.userId);
+    const stats = await this.auditService.getStats(id, req.user.userId);
 
     return {
       ...audit,
@@ -47,22 +48,22 @@ export class AuditController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAuditDto: UpdateAuditDto) {
-    return this.auditService.update(id, updateAuditDto);
+  update(@Request() req, @Param('id') id: string, @Body() updateAuditDto: UpdateAuditDto) {
+    return this.auditService.update(id, req.user.userId, updateAuditDto);
   }
 
   @Patch(':id/complete')
-  complete(@Param('id') id: string) {
-    return this.auditService.complete(id);
+  complete(@Request() req, @Param('id') id: string) {
+    return this.auditService.complete(id, req.user.userId);
   }
 
   @Patch(':id/abandon')
-  abandon(@Param('id') id: string) {
-    return this.auditService.abandon(id);
+  abandon(@Request() req, @Param('id') id: string) {
+    return this.auditService.abandon(id, req.user.userId);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.auditService.remove(id);
+  remove(@Request() req, @Param('id') id: string) {
+    return this.auditService.remove(id, req.user.userId);
   }
 }

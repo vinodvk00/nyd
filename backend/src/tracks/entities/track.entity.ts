@@ -39,6 +39,9 @@ export class Track {
   @Column({ nullable: true })
   projectId: number;
 
+  @Column({ nullable: true })
+  userId: number;
+
   @CreateDateColumn()
   createdAt: Date;
 

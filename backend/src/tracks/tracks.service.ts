@@ -1,35 +1,35 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { CreateTrackDto } from './dto/create-track.dto';
 import { UpdateTrackDto } from './dto/update-track.dto';
 import axios, { AxiosRequestConfig } from 'axios';
-import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Track } from './entities/track.entity';
 import { Project } from './entities/project.entity';
+import { AuthService } from '../auth/auth.service';
 
 @Injectable()
 export class TracksService {
   private readonly togglApiUrl = 'https://api.track.toggl.com/api/v9';
-  // private readonly apiToken = process.env.TOGGL_API_TOKEN;
 
   constructor(
-    private configService: ConfigService,
     @InjectRepository(Track)
     private trackRepository: Repository<Track>,
     @InjectRepository(Project)
     private projectRepository: Repository<Project>,
+    private authService: AuthService,
   ) {}
 
-  private getAxiosConfig(): AxiosRequestConfig {
-    const apiToken = this.configService.get<string>('TOGGL_API_TOKEN');
+  private async getAxiosConfigForUser(userId: number): Promise<AxiosRequestConfig> {
+    const togglConfig = await this.authService.getDecryptedTogglToken(userId);
 
-    if (!apiToken) {
-      throw new Error('TOGGL_API_TOKEN environment variable is not set');
+    if (!togglConfig) {
+      throw new BadRequestException('Toggl API token not configured. Please add your token in Settings.');
     }
+
     return {
       auth: {
-        username: apiToken,
+        username: togglConfig.token,
         password: 'api_token',
       },
       headers: {
@@ -38,22 +38,33 @@ export class TracksService {
     };
   }
 
-  async getCurrentRunningTask() {
+  async getWorkspaceIdForUser(userId: number): Promise<string> {
+    const togglConfig = await this.authService.getDecryptedTogglToken(userId);
+    if (!togglConfig) {
+      throw new BadRequestException('Toggl API token not configured. Please add your token in Settings.');
+    }
+    return togglConfig.workspaceId;
+  }
+
+  async getCurrentRunningTask(userId: number) {
     try {
+      const config = await this.getAxiosConfigForUser(userId);
       const res = await axios.get(
         `${this.togglApiUrl}/me/time_entries/current`,
-        this.getAxiosConfig(),
+        config,
       );
 
       return res.data;
     } catch (error) {
+      if (error instanceof BadRequestException) throw error;
       console.error('Error fetching current running task:', error.message);
       throw new Error('Failed to fetch current running task');
     }
   }
 
-  async getAllTasks(startDate?: string, endDate?: string) {
+  async getAllTasks(userId: number, startDate?: string, endDate?: string) {
     let url = `${this.togglApiUrl}/me/time_entries`;
+    const config = await this.getAxiosConfigForUser(userId);
     try {
       const params = new URLSearchParams();
 
@@ -107,9 +118,10 @@ export class TracksService {
       }
 
       console.log('Requesting Toggl URL:', url);
-      const response = await axios.get(url, this.getAxiosConfig());
+      const response = await axios.get(url, config);
       return response.data;
     } catch (error) {
+      if (error instanceof BadRequestException) throw error;
       console.error('Toggl API Error Details:', {
         status: error.response?.status,
         statusText: error.response?.statusText,
@@ -152,12 +164,12 @@ export class TracksService {
     return await this.trackRepository.save(track);
   }
 
-  async findAll() {
-    return await this.trackRepository.find();
+  async findAll(userId: number) {
+    return await this.trackRepository.find({ where: { userId } });
   }
 
-  async findOne(id: number) {
-    return await this.trackRepository.findOneBy({ id });
+  async findOne(id: number, userId: number) {
+    return await this.trackRepository.findOneBy({ id, userId });
   }
 
   async update(id: number, updateTrackDto: UpdateTrackDto) {
@@ -168,19 +180,20 @@ export class TracksService {
     return await this.trackRepository.delete(id);
   }
 
-  async findByProject(projectName: string) {
+  async findByProject(projectName: string, userId: number) {
     return await this.trackRepository.find({
-      where: { projectName },
+      where: { projectName, userId },
     });
   }
 
-  async findByDateRange(startDate: Date, endDate: Date, projectName?: string) {
+  async findByDateRange(startDate: Date, endDate: Date, userId: number, projectName?: string) {
     const query = this.trackRepository
       .createQueryBuilder('track')
       .where('track.start >= :startDate AND track.start <= :endDate', {
         startDate,
         endDate,
-      });
+      })
+      .andWhere('track.userId = :userId', { userId });
 
     if (projectName) {
       query.andWhere('track.projectName = :projectName', { projectName });
@@ -189,17 +202,18 @@ export class TracksService {
     return await query.getMany();
   }
 
-  async findPaginated(page: number, limit: number) {
+  async findPaginated(page: number, limit: number, userId: number) {
     return await this.trackRepository.find({
+      where: { userId },
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },
     });
   }
 
-  async findOneWithProject(id: number) {
+  async findOneWithProject(id: number, userId: number) {
     return await this.trackRepository.findOne({
-      where: { id },
+      where: { id, userId },
       relations: ['project'],
     });
   }
@@ -210,7 +224,9 @@ export class TracksService {
    * @param endDate Optional end date (ISO format)
    * @returns Sync statistics
    */
-  async syncFromToggl(startDate?: string, endDate?: string) {
+  async syncFromToggl(userId: number, startDate?: string, endDate?: string) {
+    const config = await this.getAxiosConfigForUser(userId);
+    const workspaceId = await this.getWorkspaceIdForUser(userId);
     try {
       let url = `${this.togglApiUrl}/me/time_entries`;
       const params = new URLSearchParams();
@@ -273,7 +289,7 @@ export class TracksService {
 
       console.log(`Fetching Toggl entries from: ${url}`);
 
-      const response = await axios.get(url, this.getAxiosConfig());
+      const response = await axios.get(url, config);
       const togglEntries = response.data;
 
       console.log(`Received ${togglEntries?.length || 0} entries from Toggl`);
@@ -319,8 +335,8 @@ export class TracksService {
 
               try {
                 const projectResponse = await axios.get(
-                  `${this.togglApiUrl}/workspaces/${entry.workspace_id}/projects/${entry.project_id}`,
-                  this.getAxiosConfig(),
+                  `${this.togglApiUrl}/workspaces/${workspaceId}/projects/${entry.project_id}`,
+                  config,
                 );
 
                 console.log(`Fetched project: ${projectResponse.data.name}`);
@@ -330,6 +346,7 @@ export class TracksService {
                   name:
                     projectResponse.data.name || `Project ${entry.project_id}`,
                   description: projectResponse.data.notes || null,
+                  userId,
                 });
 
                 await this.projectRepository.save(project);
@@ -348,6 +365,7 @@ export class TracksService {
                   id: entry.project_id,
                   name: `Project ${entry.project_id}`,
                   description: null,
+                  userId,
                 });
                 await this.projectRepository.save(project);
                 console.log(`Created fallback project ${project.id}`);
@@ -375,7 +393,8 @@ export class TracksService {
               entry.duration && entry.duration > 0 ? entry.duration : undefined,
             projectId,
             projectName,
-            tags: entry.tags || [], // Sync tags from Toggl
+            tags: entry.tags || [],
+            userId,
           };
 
           if (existingTrack) {
@@ -417,6 +436,7 @@ export class TracksService {
       console.log('Sync completed:', result);
       return result;
     } catch (error) {
+      if (error instanceof BadRequestException) throw error;
       console.error('Error syncing from Toggl:', error.message, error.stack);
       if (error.response) {
         console.error(

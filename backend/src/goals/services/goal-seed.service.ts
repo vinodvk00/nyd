@@ -1,11 +1,11 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { AreaService } from './area.service';
 import { CategoryService } from './category.service';
 import { GoalService } from './goal.service';
 import { GoalPriority, TargetPeriod } from '../entities/goal.entity';
 
 @Injectable()
-export class GoalSeedService implements OnModuleInit {
+export class GoalSeedService {
   private readonly logger = new Logger(GoalSeedService.name);
 
   constructor(
@@ -14,15 +14,11 @@ export class GoalSeedService implements OnModuleInit {
     private readonly goalService: GoalService,
   ) {}
 
-  async onModuleInit() {
-    await this.seedDefaultGoals();
-  }
-
-  async seedDefaultGoals() {
+  async seedDefaultGoals(userId: number) {
     try {
-      this.logger.log('Checking for existing goals...');
+      this.logger.log(`Checking for existing goals for user ${userId}...`);
 
-      const existingAreas = await this.areaService.findAll();
+      const existingAreas = await this.areaService.findAll(userId);
       if (existingAreas.length > 0) {
         this.logger.log(
           `Found ${existingAreas.length} existing areas. Skipping seed.`,
@@ -32,7 +28,7 @@ export class GoalSeedService implements OnModuleInit {
 
       this.logger.log('Seeding default goal structure...');
 
-      const programmingArea = await this.areaService.create({
+      const programmingArea = await this.areaService.create(userId, {
         name: 'Programming',
         icon: '📁',
         order: 1,
@@ -82,7 +78,7 @@ export class GoalSeedService implements OnModuleInit {
         categoryId: foundationsCategory.id,
       });
 
-      const developmentArea = await this.areaService.create({
+      const developmentArea = await this.areaService.create(userId, {
         name: 'Development',
         icon: '📁',
         order: 2,
@@ -146,7 +142,7 @@ export class GoalSeedService implements OnModuleInit {
         categoryId: qualityCategory.id,
       });
 
-      const hobbiesArea = await this.areaService.create({
+      const hobbiesArea = await this.areaService.create(userId, {
         name: 'Hobbies',
         icon: '📁',
         order: 3,
