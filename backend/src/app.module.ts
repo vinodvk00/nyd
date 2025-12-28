@@ -1,4 +1,4 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { Module, OnModuleInit, Logger } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TracksModule } from './tracks/tracks.module';
@@ -10,6 +10,35 @@ import { GoalsModule } from './goals/goals.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ActivityTemplateService } from './activity-template/activity-template.service';
+import { DataSource } from 'typeorm';
+
+const DB_RETRY_CONFIG = {
+  initialDelayMs: 1000,
+  maxDelayMs: 60000,
+  multiplier: 2,
+};
+
+async function createDataSourceWithRetry(
+  options: any,
+  logger: Logger,
+): Promise<DataSource> {
+  let attempt = 0;
+  let delayMs = DB_RETRY_CONFIG.initialDelayMs;
+
+  while (true) {
+    attempt++;
+    try {
+      const dataSource = new DataSource(options);
+      await dataSource.initialize();
+      logger.log(`Database connected after ${attempt} attempt(s)`);
+      return dataSource;
+    } catch (error) {
+      logger.warn(`DB connection attempt ${attempt} failed. Retrying in ${delayMs / 1000}s...`);
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      delayMs = Math.min(delayMs * DB_RETRY_CONFIG.multiplier, DB_RETRY_CONFIG.maxDelayMs);
+    }
+  }
+}
 
 @Module({
   imports: [
@@ -28,8 +57,6 @@ import { ActivityTemplateService } from './activity-template/activity-template.s
         database: configService.get('DB_DATABASE'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: true, // TODO: Set to false in production
-        retryAttempts: 10,
-        retryDelay: 3000,
         autoLoadEntities: true,
         keepConnectionAlive: true,
         logging:
@@ -38,6 +65,10 @@ import { ActivityTemplateService } from './activity-template/activity-template.s
             : false,
       }),
       inject: [ConfigService],
+      dataSourceFactory: async (options) => {
+        const logger = new Logger('DatabaseConnection');
+        return createDataSourceWithRetry(options, logger);
+      },
     }),
     TracksModule,
     AuditModule,

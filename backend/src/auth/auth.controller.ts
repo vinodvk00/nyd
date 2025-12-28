@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, UseGuards, Request, Res, Req } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards, Request, Res, Req, UnauthorizedException } from '@nestjs/common';
 import type { Response, Request as ExpressRequest } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -54,7 +54,7 @@ export class AuthController {
     const refreshToken = req.cookies?.refresh_token;
 
     if (!refreshToken) {
-      throw new Error('Refresh token not found');
+      throw new UnauthorizedException('Refresh token not found');
     }
 
     const result = await this.authService.refreshAccessToken(refreshToken);
@@ -87,7 +87,6 @@ export class AuthController {
       await this.authService.revokeRefreshToken(refreshToken);
     }
 
-    // Clear cookies
     res.clearCookie('access_token');
     res.clearCookie('refresh_token');
 
