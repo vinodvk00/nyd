@@ -200,37 +200,117 @@
 
 .dark .recharts-text,
 .dark .recharts-cartesian-axis-tick-value {
-  fill: oklch(0.85 0.02 265) !important;
-  /* Light text for axis labels */
+  fill: oklch(0.75 0.02 265) !important;
+  font-weight: 500 !important;
+}
+
+/* Tooltip styling */
+.recharts-tooltip-wrapper {
+  outline: none !important;
 }
 
 .dark .recharts-tooltip-wrapper {
-  color: oklch(0.98 0.01 265) !important;
+  outline: none !important;
+}
+
+.recharts-default-tooltip {
+  background-color: white !important;
+  border: 1px solid oklch(0.9 0 0) !important;
+  color: oklch(0.2 0 0) !important;
+  padding: 12px 16px !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+  font-size: 13px !important;
 }
 
 .dark .recharts-default-tooltip {
-  background-color: oklch(0.15 0.05 265) !important;
-  border: 1px solid oklch(0.25 0.05 265) !important;
-  color: oklch(0.98 0.01 265) !important;
+  background-color: oklch(0.16 0.03 265) !important;
+  border: 1px solid oklch(0.28 0.04 265) !important;
+  color: oklch(0.95 0.01 265) !important;
+  padding: 12px 16px !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+  font-size: 13px !important;
+}
+
+.recharts-tooltip-label {
+  color: oklch(0.5 0 0) !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  margin-bottom: 6px !important;
+  padding-bottom: 6px !important;
+  border-bottom: 1px solid oklch(0.9 0 0) !important;
+}
+
+.dark .recharts-tooltip-label {
+  color: oklch(0.6 0.02 265) !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  margin-bottom: 6px !important;
+  padding-bottom: 6px !important;
+  border-bottom: 1px solid oklch(0.25 0.04 265) !important;
+}
+
+.recharts-tooltip-item {
+  color: oklch(0.3 0 0) !important;
+  padding: 3px 0 !important;
+  font-weight: 500 !important;
 }
 
 .dark .recharts-tooltip-item {
-  color: oklch(0.98 0.01 265) !important;
+  color: oklch(0.92 0.01 265) !important;
+  padding: 3px 0 !important;
+  font-weight: 500 !important;
 }
 
-/* Area chart fill with subtle transparency */
+.recharts-tooltip-item-name {
+  color: oklch(0.5 0 0) !important;
+  margin-right: 8px !important;
+}
+
+.dark .recharts-tooltip-item-name {
+  color: oklch(0.65 0.02 265) !important;
+  margin-right: 8px !important;
+}
+
+.recharts-tooltip-item-value {
+  font-weight: 600 !important;
+}
+
+/* Active dot styling */
+.recharts-active-dot circle {
+  r: 5 !important;
+  stroke: white !important;
+  stroke-width: 2 !important;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2)) !important;
+}
+
+.dark .recharts-active-dot circle {
+  stroke: oklch(0.16 0.03 265) !important;
+  stroke-width: 2 !important;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4)) !important;
+}
+
+/* Cursor line */
+.recharts-tooltip-cursor {
+  stroke: oklch(0.7 0 0) !important;
+  stroke-dasharray: 4 4 !important;
+}
+
+.dark .recharts-tooltip-cursor {
+  stroke: oklch(0.4 0.04 265) !important;
+  stroke-dasharray: 4 4 !important;
+}
+
+/* Area chart fill */
 .dark .recharts-area-area {
   fill: oklch(0.6 0.2 200) !important;
-  /* Cyan fill */
-  fill-opacity: 0.15 !important;
-  /* Lighter, more transparent */
+  fill-opacity: 0.25 !important;
 }
 
 .recharts-area-area {
   fill: oklch(0.6 0.2 200) !important;
-  /* Cyan fill for light mode */
-  fill-opacity: 0.2 !important;
-  /* Lighter for light mode */
+  fill-opacity: 0.3 !important;
 }
 
 .dark .recharts-area-curve {
@@ -288,6 +368,17 @@
   stroke: oklch(0.6 0 0) !important;
   stroke-width: 2px !important;
   display: block !important;
+}
+
+/* Grid lines */
+.dark .recharts-cartesian-grid line {
+  stroke: oklch(0.25 0.04 265) !important;
+  stroke-opacity: 1 !important;
+}
+
+.recharts-cartesian-grid line {
+  stroke: oklch(0.85 0 0) !important;
+  stroke-opacity: 1 !important;
 }
 
 /* BarList text colors for dark mode */

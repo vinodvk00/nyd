@@ -8,15 +8,54 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BarChart } from "@tremor/react";
 import { useHourlyPattern } from "@/lib/hooks";
 import type { TimePeriod, CustomDateRange } from "@/types/analytics";
+import {
+  Bar,
+  BarChart as RechartsBarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 interface HourlyPatternProps {
   startDate?: string;
   endDate?: string;
   period?: TimePeriod;
   customRange?: CustomDateRange;
+}
+
+interface ChartDataItem {
+  hour: string;
+  hours: number;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    value: number;
+    dataKey: string;
+    payload: ChartDataItem;
+  }>;
+}
+
+function CustomTooltip({ active, payload }: CustomTooltipProps) {
+  if (!active || !payload || !payload.length) return null;
+
+  const data = payload[0].payload;
+  const hours = data.hours;
+
+  return (
+    <div className="bg-card border border-border rounded-lg px-4 py-3 shadow-lg">
+      <p className="text-muted-foreground text-xs mb-2">{data.hour}</p>
+      <p className="text-foreground text-xl font-semibold">
+        {hours.toFixed(1)}
+        <span className="text-muted-foreground text-sm font-normal ml-1">hours</span>
+      </p>
+    </div>
+  );
 }
 
 export function HourlyPattern({
@@ -61,7 +100,6 @@ export function HourlyPattern({
     );
   }
 
-  // Format hour in 12-hour format
   const formatHour = (hour: number) => {
     if (hour === 0) return "12 AM";
     if (hour === 12) return "12 PM";
@@ -69,12 +107,11 @@ export function HourlyPattern({
     return `${hour - 12} PM`;
   };
 
-  // Format data for Tremor chart
-  const chartData = data.hourlyDistribution
+  const chartData: ChartDataItem[] = data.hourlyDistribution
     .sort((a, b) => a.hour - b.hour)
     .map((item) => ({
       hour: formatHour(item.hour),
-      Hours: item.totalHours,
+      hours: item.totalHours,
     }));
 
   const peakHour =
@@ -83,6 +120,10 @@ export function HourlyPattern({
           current.totalHours > prev.totalHours ? current : prev
         )
       : null;
+
+  const maxHours = Math.max(...chartData.map(d => d.hours), 1);
+  const yAxisMax = Math.max(Math.ceil(maxHours / 2) * 2, 4);
+  const yAxisTicks = Array.from({ length: yAxisMax / 2 + 1 }, (_, i) => i * 2);
 
   return (
     <Card>
@@ -105,19 +146,42 @@ export function HourlyPattern({
           </div>
         ) : (
           <div className="h-80 w-full">
-            <BarChart
-              className="h-full w-full"
-              data={chartData}
-              index="hour"
-              categories={["Hours"]}
-              colors={["cyan"]}
-              valueFormatter={(value) => `${value.toFixed(1)}h`}
-              showLegend={false}
-              showGridLines={true}
-              yAxisWidth={48}
-              showXAxis={true}
-              showYAxis={true}
-            />
+            <ResponsiveContainer width="100%" height="100%">
+              <RechartsBarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  className="stroke-border"
+                />
+                <XAxis
+                  dataKey="hour"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12 }}
+                  className="fill-muted-foreground"
+                  dy={10}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12 }}
+                  className="fill-muted-foreground"
+                  width={40}
+                  domain={[0, yAxisMax]}
+                  ticks={yAxisTicks}
+                  tickFormatter={(value) => `${value}h`}
+                />
+                <Tooltip
+                  content={<CustomTooltip />}
+                  cursor={{ fill: 'oklch(0.5 0.05 265 / 0.2)' }}
+                />
+                <Bar
+                  dataKey="hours"
+                  fill="oklch(0.7 0.18 200)"
+                  radius={[4, 4, 0, 0]}
+                />
+              </RechartsBarChart>
+            </ResponsiveContainer>
           </div>
         )}
       </CardContent>
