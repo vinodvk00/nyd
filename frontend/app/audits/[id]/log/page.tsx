@@ -720,12 +720,24 @@ export default function LogPage({
                       }`}
                       onClick={() => {
                         if (!isReadOnly) {
-                          setSelectedHour(startHour);
+                          const now = new Date();
+                          const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+                          let defaultStartMinutes = startMinutes;
+                          if (currentMinutes >= startMinutes && currentMinutes < endMinutes) {
+                            defaultStartMinutes = currentMinutes;
+                          }
+
+                          const defaultHour = Math.floor(defaultStartMinutes / 60);
+                          const defaultMinute = defaultStartMinutes % 60;
+                          const remainingInGap = endMinutes - defaultStartMinutes;
+
+                          setSelectedHour(defaultHour);
                           setSelectedGap({ startMinutes, endMinutes });
                           setFormData((prev) => ({
                             ...prev,
-                            startMinute: startMinute,
-                            durationMinutes: Math.min(gapDuration, 60), // Default to max 60 mins or gap size
+                            startMinute: defaultMinute,
+                            durationMinutes: Math.min(remainingInGap, 60),
                           }));
                         }
                       }}

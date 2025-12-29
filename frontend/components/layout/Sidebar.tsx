@@ -171,7 +171,7 @@ export function Sidebar() {
         {/* Brand Logo - Header Area */}
         <Link
           href="/dashboard"
-          className="flex items-center px-6 py-4 border-b hover:bg-accent/50 transition-colors"
+          className="flex items-center px-6 h-16 border-b hover:bg-accent/50 transition-colors shrink-0"
           onClick={handleNavClick}
         >
           <h1 className="text-2xl font-bold">NYD</h1>
