@@ -13,6 +13,7 @@ import type {
   TimePeriod,
   GroupBy,
   TrendMetric,
+  Track,
 } from '@/types/analytics';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -195,6 +196,18 @@ export async function fetchTopProjects(
 ): Promise<TopProjects> {
   const query = buildQueryString({ limit, period, startDate, endDate });
   return fetchApi<TopProjects>(`/tracks/stats/top-projects${query}`);
+}
+
+/**
+ * Get Tracks by Date Range
+ * GET /tracks/date-range?startDate={date}&endDate={date}
+ */
+export async function fetchDayTracks(
+  startDate: string,
+  endDate: string
+): Promise<Track[]> {
+  const query = buildQueryString({ startDate, endDate });
+  return fetchApi<Track[]>(`/tracks/date-range${query}`);
 }
 
 // ============================================================================

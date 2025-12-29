@@ -9,3 +9,4 @@ export { useProjectBreakdown } from './use-project-breakdown';
 export { useHourlyPattern } from './use-hourly-pattern';
 export { useTrends } from './use-trends';
 export { useTopProjects } from './use-top-projects';
+export { useDayTracks } from './use-day-tracks';

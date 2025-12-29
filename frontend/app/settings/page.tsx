@@ -22,6 +22,8 @@ import {
   removeTogglToken,
   getTogglTokenStatus,
 } from "@/lib/api";
+import { getTimezoneName, getTimezoneOffsetString } from "@/lib/timezone";
+import { Globe } from "lucide-react";
 
 export default function SettingsPage() {
   const { user, checkAuth } = useAuth();
@@ -156,8 +158,9 @@ export default function SettingsPage() {
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="preferences">Preferences</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
         </TabsList>
@@ -192,6 +195,39 @@ export default function SettingsPage() {
                   {profileLoading ? "Saving..." : "Save Changes"}
                 </Button>
               </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="preferences">
+          <Card>
+            <CardHeader>
+              <CardTitle>Preferences</CardTitle>
+              <CardDescription>
+                Configure your application preferences
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-start gap-4">
+                  <div className="shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Globe className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <Label className="text-base">Timezone</Label>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      All times are displayed in your local timezone
+                    </p>
+                    <div className="mt-3 p-3 bg-muted rounded-lg">
+                      <p className="font-medium">{getTimezoneName()}</p>
+                      <p className="text-sm text-muted-foreground">{getTimezoneOffsetString()}</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Timezone is automatically detected from your browser. Custom timezone selection coming soon.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
