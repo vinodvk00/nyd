@@ -42,8 +42,8 @@ export function SummaryCards({ period = 'month', customRange }: SummaryCardsProp
   }
 
   const getTrendInfo = (trend: number) => {
-    if (trend > 0) return { color: 'text-green-600 dark:text-green-400', symbol: '↑', text: 'increase' }
-    if (trend < 0) return { color: 'text-red-600 dark:text-red-400', symbol: '↓', text: 'decrease' }
+    if (trend > 0) return { color: 'text-success', symbol: '↑', text: 'increase' }
+    if (trend < 0) return { color: 'text-destructive', symbol: '↓', text: 'decrease' }
     return { color: 'text-muted-foreground', symbol: '→', text: 'stable' }
   }
 

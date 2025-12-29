@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import * as TabsPrimitive from "@radix-ui/react-tabs"
-import { motion } from "framer-motion"
 
 import { cn } from "@/lib/utils"
 
@@ -37,30 +36,17 @@ function TabsList({
 
 function TabsTrigger({
   className,
-  children,
   ...props
 }: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
   return (
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "relative cursor-pointer focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring text-foreground dark:text-muted-foreground data-[state=active]:text-foreground dark:data-[state=active]:text-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1 text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "relative cursor-pointer focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring text-muted-foreground hover:text-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1 text-sm font-medium whitespace-nowrap transition-all focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-hover data-[state=active]:text-foreground data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}
-    >
-      {children}
-      <motion.div
-        layoutId="activeTab"
-        className="absolute inset-0 bg-background dark:bg-card border border-border rounded-md shadow-md data-[state=inactive]:hidden"
-        style={{ zIndex: -1 }}
-        transition={{
-          type: "spring",
-          stiffness: 500,
-          damping: 30
-        }}
-      />
-    </TabsPrimitive.Trigger>
+    />
   )
 }
 

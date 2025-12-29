@@ -1,8 +1,7 @@
 "use client"
 
 import { useState } from 'react';
-import { Menu, Plus, Sun, Moon, User, LogOut } from 'lucide-react';
-import { useTheme } from 'next-themes';
+import { Menu, Plus, User, LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { useSidebar } from '@/contexts/sidebar-context';
 import { Button } from '@/components/ui/button';
@@ -15,16 +14,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { QuickLogModal } from '@/components/modals/QuickLogModal';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 export function StatusBar() {
   const { user, logout } = useAuth();
-  const { theme, setTheme } = useTheme();
   const { toggle, isMobile } = useSidebar();
   const [showQuickLog, setShowQuickLog] = useState(false);
 
   return (
     <>
-      <header className="sticky top-0 z-30 h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-30 h-16 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
         <div className="flex h-full items-center justify-between px-4">
           {/* Left: Hamburger (mobile only) */}
           <div className="flex items-center gap-4">
@@ -44,7 +43,7 @@ export function StatusBar() {
           <div className="flex items-center gap-2 ml-auto">
             <Button
               onClick={() => setShowQuickLog(true)}
-              className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600"
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
               size="sm"
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -52,15 +51,7 @@ export function StatusBar() {
             </Button>
 
             {/* Theme Toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              aria-label="Toggle theme"
-            >
-              <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-              <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-            </Button>
+            <ThemeToggle />
 
             {/* User Dropdown */}
             <DropdownMenu>

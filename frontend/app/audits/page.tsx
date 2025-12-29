@@ -95,7 +95,7 @@ export default function AuditsPage() {
     <div className="container mx-auto p-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">Time Awareness Audits</h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-muted-foreground">
             Track and analyze how you spend your time using the Eisenhower Matrix framework
           </p>
         </div>
@@ -103,14 +103,14 @@ export default function AuditsPage() {
         <div className="flex justify-between items-center mb-8">
           <button
             onClick={() => setShowCreateForm(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
           >
             Create Audit for Different Month
           </button>
         </div>
 
       {showCreateForm && (
-        <div className="mb-8 p-6 border rounded-lg bg-gray-50 dark:bg-gray-900">
+        <div className="mb-8 p-6 border rounded-lg bg-muted">
           <h2 className="text-xl font-semibold mb-4">{editingAudit ? 'Edit Audit' : 'Create New Audit'}</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -121,10 +121,10 @@ export default function AuditsPage() {
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 border rounded bg-white dark:bg-gray-800"
+                className="w-full px-3 py-2 border border-border rounded bg-background"
                 placeholder={`Auto-generated: ${new Date(formData.year, formData.month - 1).toLocaleDateString('en-US', { month: 'long' })} ${formData.year} Audit`}
               />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Leave empty to auto-generate based on month/year
               </p>
             </div>
@@ -137,7 +137,7 @@ export default function AuditsPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, month: parseInt(e.target.value) })
                   }
-                  className="w-full px-3 py-2 border rounded bg-white dark:bg-gray-800"
+                  className="w-full px-3 py-2 border border-border rounded bg-background"
                   required
                 >
                   <option value={1}>January</option>
@@ -162,7 +162,7 @@ export default function AuditsPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, year: parseInt(e.target.value) })
                   }
-                  className="w-full px-3 py-2 border rounded bg-white dark:bg-gray-800"
+                  className="w-full px-3 py-2 border border-border rounded bg-background"
                   required
                 >
                   {Array.from({ length: 5 }, (_, i) => {
@@ -177,8 +177,8 @@ export default function AuditsPage() {
               </div>
             </div>
 
-            <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
-              <p className="text-sm text-blue-900 dark:text-blue-200">
+            <div className="p-3 bg-info/10 rounded-lg border border-info/30">
+              <p className="text-sm text-info">
                 <span className="font-semibold">Audit Period:</span>{' '}
                 {new Date(formData.year, formData.month - 1, 1).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                 {' - '}
@@ -193,7 +193,7 @@ export default function AuditsPage() {
               <textarea
                 value={formData.goal}
                 onChange={(e) => setFormData({ ...formData, goal: e.target.value })}
-                className="w-full px-3 py-2 border rounded bg-white dark:bg-gray-800"
+                className="w-full px-3 py-2 border border-border rounded bg-background"
                 placeholder="What do you hope to discover from this audit?"
                 rows={3}
               />
@@ -202,7 +202,7 @@ export default function AuditsPage() {
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
               >
                 {editingAudit ? 'Update Audit' : 'Create Audit'}
               </button>
@@ -214,7 +214,7 @@ export default function AuditsPage() {
                   const now = new Date();
                   setFormData({ name: '', month: now.getMonth() + 1, year: now.getFullYear(), goal: '' });
                 }}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                className="px-4 py-2 bg-secondary text-secondary-foreground rounded hover:bg-secondary/80"
               >
                 Cancel
               </button>
@@ -226,48 +226,48 @@ export default function AuditsPage() {
       <div className="space-y-4">
         <h2 className="text-xl font-semibold mb-4">All Audits</h2>
         {audits.map((audit, index) => {
-          const isCurrentMonth = index === 0; // First audit is always current month (sorted desc)
+          const isCurrentMonth = index === 0;
 
           return (
             <div
               key={audit.id}
               className={`p-6 border rounded-lg ${
                 isCurrentMonth
-                  ? 'border-2 border-blue-500 bg-blue-50 dark:bg-blue-950/30'
+                  ? 'border-2 border-info bg-info/10'
                   : ''
               }`}
             >
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <div className="flex items-center gap-3">
-                    <h3 className={`text-xl font-semibold ${isCurrentMonth ? 'text-blue-900 dark:text-blue-100' : ''}`}>
+                    <h3 className={`text-xl font-semibold ${isCurrentMonth ? 'text-info' : ''}`}>
                       {audit.name}
                     </h3>
                     {isCurrentMonth && (
-                      <span className="text-xs px-2 py-1 rounded bg-blue-600 text-white">
+                      <span className="text-xs px-2 py-1 rounded bg-info text-info-foreground">
                         Current Month
                       </span>
                     )}
                     <button
                       onClick={() => handleEdit(audit)}
-                      className="text-sm px-3 py-1 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 border border-gray-300 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                      className="text-sm px-3 py-1 text-muted-foreground hover:text-foreground border border-border rounded hover:bg-hover transition"
                     >
                       ✏️ Edit
                     </button>
                   </div>
-                  <p className={`text-sm mt-1 ${isCurrentMonth ? 'text-blue-700 dark:text-blue-300' : 'text-gray-600 dark:text-gray-400'}`}>
+                  <p className={`text-sm mt-1 ${isCurrentMonth ? 'text-info/80' : 'text-muted-foreground'}`}>
                     {new Date(audit.startDate).toLocaleDateString()} - {new Date(audit.endDate).toLocaleDateString()} ({audit.durationDays} days)
                   </p>
                   {audit.goal && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 italic">{audit.goal}</p>
+                    <p className="text-sm text-muted-foreground mt-2 italic">{audit.goal}</p>
                   )}
                 </div>
                 <Link
                   href={`/audits/${audit.id}/log`}
                   className={`px-6 py-3 rounded-lg font-semibold transition ${
                     isCurrentMonth
-                      ? 'bg-blue-600 text-white hover:bg-blue-700'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                      : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                   }`}
                 >
                   {isCurrentMonth ? 'Log Time →' : 'View →'}
@@ -285,7 +285,7 @@ export default function AuditsPage() {
         })}
 
         {audits.length === 0 && (
-          <p className="text-gray-500 dark:text-gray-400 italic">No audits yet. Start logging time to create your first audit!</p>
+          <p className="text-muted-foreground italic">No audits yet. Start logging time to create your first audit!</p>
         )}
       </div>
     </div>

@@ -34,27 +34,27 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
-      <Card className="w-full max-w-md bg-gray-800 border-gray-700">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl text-center text-gray-100">Time Tracker Login</CardTitle>
+          <CardTitle className="text-2xl text-center">Time Tracker Login</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {justRegistered && (
-              <div className="bg-green-900/50 border border-green-700 text-green-200 px-4 py-3 rounded">
+              <div className="bg-success/20 border border-success text-success px-4 py-3 rounded">
                 Account created successfully. Please sign in.
               </div>
             )}
 
             {error && (
-              <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded">
+              <div className="bg-destructive/20 border border-destructive text-destructive px-4 py-3 rounded">
                 {error}
               </div>
             )}
 
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-gray-300">
+              <label htmlFor="email" className="text-sm font-medium text-foreground">
                 Email
               </label>
               <input
@@ -63,7 +63,7 @@ function LoginForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400"
+                className="w-full px-3 py-2 bg-input border border-border text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent placeholder:text-muted-foreground"
                 placeholder="Enter your email"
                 disabled={loading}
               />
@@ -71,10 +71,10 @@ function LoginForm() {
 
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <label htmlFor="password" className="text-sm font-medium text-gray-300">
+                <label htmlFor="password" className="text-sm font-medium text-foreground">
                   Password
                 </label>
-                <Link href="/forgot-password" className="text-sm text-blue-400 hover:text-blue-300">
+                <Link href="/forgot-password" className="text-sm text-primary hover:text-primary/80">
                   Forgot password?
                 </Link>
               </div>
@@ -84,7 +84,7 @@ function LoginForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400"
+                className="w-full px-3 py-2 bg-input border border-border text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent placeholder:text-muted-foreground"
                 placeholder="••••••••"
                 disabled={loading}
               />
@@ -98,9 +98,9 @@ function LoginForm() {
               {loading ? 'Logging in...' : 'Login'}
             </Button>
 
-            <p className="text-center text-sm text-gray-400">
+            <p className="text-center text-sm text-muted-foreground">
               Don&apos;t have an account?{' '}
-              <Link href="/register" className="text-blue-400 hover:text-blue-300">
+              <Link href="/register" className="text-primary hover:text-primary/80">
                 Sign up
               </Link>
             </p>
@@ -114,10 +114,10 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
-        <Card className="w-full max-w-md bg-gray-800 border-gray-700">
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md">
           <CardContent className="py-8">
-            <p className="text-gray-300 text-center">Loading...</p>
+            <p className="text-muted-foreground text-center">Loading...</p>
           </CardContent>
         </Card>
       </div>

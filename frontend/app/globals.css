@@ -24,6 +24,13 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -36,6 +43,10 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-pilot: var(--pilot);
+  --color-plane: var(--plane);
+  --color-engineer: var(--engineer);
+  --color-hover: var(--hover);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -67,6 +78,17 @@
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
+  --destructive-foreground: oklch(0.985 0 0);
+  --success: oklch(0.55 0.17 145);
+  --success-foreground: oklch(0.985 0 0);
+  --warning: oklch(0.75 0.15 85);
+  --warning-foreground: oklch(0.25 0.05 85);
+  --info: oklch(0.55 0.2 250);
+  --info-foreground: oklch(0.985 0 0);
+  --pilot: oklch(0.55 0.17 145);
+  --plane: oklch(0.55 0.2 250);
+  --engineer: oklch(0.6 0.2 300);
+  --hover: oklch(0.95 0 0);
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -120,6 +142,17 @@
   /* Green */
   --chart-5: oklch(0.7 0.2 340);
   /* Pink */
+  --destructive-foreground: oklch(0.98 0.01 265);
+  --success: oklch(0.65 0.18 145);
+  --success-foreground: oklch(0.98 0.01 265);
+  --warning: oklch(0.75 0.15 85);
+  --warning-foreground: oklch(0.2 0.05 85);
+  --info: oklch(0.65 0.19 240);
+  --info-foreground: oklch(0.98 0.01 265);
+  --pilot: oklch(0.65 0.18 145);
+  --plane: oklch(0.65 0.19 240);
+  --engineer: oklch(0.7 0.18 300);
+  --hover: oklch(0.22 0.05 265);
   --sidebar: oklch(0.1 0.04 265);
   /* Darker sidebar */
   --sidebar-foreground: oklch(0.95 0.02 265);

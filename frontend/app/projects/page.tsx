@@ -22,8 +22,8 @@ export default function ProjectsPage() {
       <Card className="max-w-2xl mx-auto mt-12">
         <CardContent className="pt-12 pb-12 text-center space-y-6">
           <div className="flex justify-center">
-            <div className="h-24 w-24 rounded-full bg-purple-500/10 flex items-center justify-center">
-              <Folder className="h-12 w-12 text-purple-500" />
+            <div className="h-24 w-24 rounded-full bg-engineer/10 flex items-center justify-center">
+              <Folder className="h-12 w-12 text-engineer" />
             </div>
           </div>
           <div className="space-y-2">
@@ -35,7 +35,7 @@ export default function ProjectsPage() {
           <div className="flex gap-3 justify-center">
             <Button
               onClick={() => router.push('/dashboard')}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
               <ArrowRight className="h-4 w-4 mr-2" />
               Go to Dashboard

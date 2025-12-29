@@ -39,16 +39,16 @@ export default function ForgotPasswordPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
-        <Card className="w-full max-w-md bg-gray-800 border-gray-700">
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-2xl text-center text-gray-100">Check your email</CardTitle>
+            <CardTitle className="text-2xl text-center">Check your email</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-gray-300 text-center">
+            <p className="text-foreground text-center">
               If an account exists for {email}, we&apos;ve sent a password reset link.
             </p>
-            <p className="text-gray-400 text-sm text-center">
+            <p className="text-muted-foreground text-sm text-center">
               The link expires in 15 minutes.
             </p>
             <Link href="/login" className="block">
@@ -63,25 +63,25 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
-      <Card className="w-full max-w-md bg-gray-800 border-gray-700">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl text-center text-gray-100">Reset your password</CardTitle>
+          <CardTitle className="text-2xl text-center">Reset your password</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded">
+              <div className="bg-destructive/20 border border-destructive text-destructive px-4 py-3 rounded">
                 {error}
               </div>
             )}
 
-            <p className="text-gray-400 text-sm">
+            <p className="text-muted-foreground text-sm">
               Enter your email address and we&apos;ll send you a link to reset your password.
             </p>
 
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-gray-300">
+              <label htmlFor="email" className="text-sm font-medium text-foreground">
                 Email
               </label>
               <input
@@ -90,7 +90,7 @@ export default function ForgotPasswordPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400"
+                className="w-full px-3 py-2 bg-input border border-border text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent placeholder:text-muted-foreground"
                 placeholder="Enter your email"
                 disabled={loading}
               />
@@ -104,7 +104,7 @@ export default function ForgotPasswordPage() {
               {loading ? 'Sending...' : 'Send Reset Link'}
             </Button>
 
-            <Link href="/login" className="block text-center text-sm text-gray-400 hover:text-gray-300">
+            <Link href="/login" className="block text-center text-sm text-muted-foreground hover:text-foreground">
               Back to Login
             </Link>
           </form>

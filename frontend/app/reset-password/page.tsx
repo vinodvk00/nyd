@@ -76,10 +76,10 @@ function ResetPasswordForm() {
 
   if (validating) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
-        <Card className="w-full max-w-md bg-gray-800 border-gray-700">
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md">
           <CardContent className="py-8">
-            <p className="text-gray-300 text-center">Validating reset link...</p>
+            <p className="text-muted-foreground text-center">Validating reset link...</p>
           </CardContent>
         </Card>
       </div>
@@ -88,13 +88,13 @@ function ResetPasswordForm() {
 
   if (!token || !tokenValid) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
-        <Card className="w-full max-w-md bg-gray-800 border-gray-700">
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-2xl text-center text-gray-100">Invalid or Expired Link</CardTitle>
+            <CardTitle className="text-2xl text-center">Invalid or Expired Link</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-gray-400 text-center">
+            <p className="text-muted-foreground text-center">
               This password reset link is invalid or has expired.
             </p>
             <Link href="/forgot-password" className="block">
@@ -108,13 +108,13 @@ function ResetPasswordForm() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
-        <Card className="w-full max-w-md bg-gray-800 border-gray-700">
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-2xl text-center text-gray-100">Password Reset</CardTitle>
+            <CardTitle className="text-2xl text-center">Password Reset</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-gray-300 text-center">
+            <p className="text-foreground text-center">
               Your password has been reset successfully.
             </p>
             <Link href="/login" className="block">
@@ -127,27 +127,27 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
-      <Card className="w-full max-w-md bg-gray-800 border-gray-700">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl text-center text-gray-100">Set New Password</CardTitle>
+          <CardTitle className="text-2xl text-center">Set New Password</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded">
+              <div className="bg-destructive/20 border border-destructive text-destructive px-4 py-3 rounded">
                 {error}
               </div>
             )}
 
             {email && (
-              <p className="text-gray-400 text-sm">
+              <p className="text-muted-foreground text-sm">
                 Setting password for {email}
               </p>
             )}
 
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-gray-300">
+              <label htmlFor="password" className="text-sm font-medium text-foreground">
                 New Password
               </label>
               <input
@@ -156,7 +156,7 @@ function ResetPasswordForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400"
+                className="w-full px-3 py-2 bg-input border border-border text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent placeholder:text-muted-foreground"
                 placeholder="••••••••"
                 disabled={loading}
                 minLength={8}
@@ -164,7 +164,7 @@ function ResetPasswordForm() {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-300">
+              <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
                 Confirm Password
               </label>
               <input
@@ -173,7 +173,7 @@ function ResetPasswordForm() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400"
+                className="w-full px-3 py-2 bg-input border border-border text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent placeholder:text-muted-foreground"
                 placeholder="••••••••"
                 disabled={loading}
                 minLength={8}
@@ -197,10 +197,10 @@ function ResetPasswordForm() {
 export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
-        <Card className="w-full max-w-md bg-gray-800 border-gray-700">
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md">
           <CardContent className="py-8">
-            <p className="text-gray-300 text-center">Loading...</p>
+            <p className="text-muted-foreground text-center">Loading...</p>
           </CardContent>
         </Card>
       </div>

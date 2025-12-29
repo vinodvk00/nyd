@@ -55,21 +55,21 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
-      <Card className="w-full max-w-md bg-gray-800 border-gray-700">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl text-center text-gray-100">Create Account</CardTitle>
+          <CardTitle className="text-2xl text-center">Create Account</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded">
+              <div className="bg-destructive/20 border border-destructive text-destructive px-4 py-3 rounded">
                 {error}
               </div>
             )}
 
             <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium text-gray-300">
+              <label htmlFor="name" className="text-sm font-medium text-foreground">
                 Name
               </label>
               <input
@@ -78,14 +78,14 @@ export default function RegisterPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400"
+                className="w-full px-3 py-2 bg-input border border-border text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent placeholder:text-muted-foreground"
                 placeholder="Enter your name"
                 disabled={loading}
               />
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-gray-300">
+              <label htmlFor="email" className="text-sm font-medium text-foreground">
                 Email
               </label>
               <input
@@ -94,14 +94,14 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400"
+                className="w-full px-3 py-2 bg-input border border-border text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent placeholder:text-muted-foreground"
                 placeholder="Enter your email"
                 disabled={loading}
               />
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-gray-300">
+              <label htmlFor="password" className="text-sm font-medium text-foreground">
                 Password
               </label>
               <input
@@ -110,7 +110,7 @@ export default function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400"
+                className="w-full px-3 py-2 bg-input border border-border text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent placeholder:text-muted-foreground"
                 placeholder="••••••••"
                 disabled={loading}
                 minLength={8}
@@ -118,7 +118,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-300">
+              <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
                 Confirm Password
               </label>
               <input
@@ -127,7 +127,7 @@ export default function RegisterPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400"
+                className="w-full px-3 py-2 bg-input border border-border text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent placeholder:text-muted-foreground"
                 placeholder="••••••••"
                 disabled={loading}
                 minLength={8}
@@ -142,9 +142,9 @@ export default function RegisterPage() {
               {loading ? 'Creating account...' : 'Create Account'}
             </Button>
 
-            <p className="text-center text-sm text-gray-400">
+            <p className="text-center text-sm text-muted-foreground">
               Already have an account?{' '}
-              <Link href="/login" className="text-blue-400 hover:text-blue-300">
+              <Link href="/login" className="text-primary hover:text-primary/80">
                 Sign in
               </Link>
             </p>

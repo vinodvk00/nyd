@@ -16,9 +16,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-const PILOT_COLOR = '#22c55e';   // green-500
-const PLANE_COLOR = '#3b82f6';   // blue-500
-const ENGINEER_COLOR = '#a855f7'; // purple-500
+const PILOT_COLOR = 'var(--pilot)';
+const PLANE_COLOR = 'var(--plane)';
+const ENGINEER_COLOR = 'var(--engineer)';
 
 interface NavItem {
   label: string;
@@ -41,7 +41,7 @@ function UserSection({ onNavClick }: { onNavClick: () => void }) {
     <div className="border-t px-3 py-3">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="w-full flex items-center gap-3 px-2 py-2 text-sm rounded-lg hover:bg-foreground/5 cursor-pointer transition-colors focus:outline-none">
+          <button className="w-full flex items-center gap-3 px-2 py-2 text-sm rounded-lg hover:bg-hover cursor-pointer transition-colors focus:outline-none">
             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
               <User className="h-4 w-4 text-primary" />
             </div>
@@ -52,7 +52,7 @@ function UserSection({ onNavClick }: { onNavClick: () => void }) {
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" side="top" className="w-56">
-          <DropdownMenuItem asChild className="cursor-pointer focus:bg-foreground/5">
+          <DropdownMenuItem asChild className="cursor-pointer focus:bg-hover">
             <Link href="/settings" onClick={onNavClick}>
               <Settings className="mr-2 h-4 w-4" />
               Settings
@@ -64,7 +64,7 @@ function UserSection({ onNavClick }: { onNavClick: () => void }) {
               onNavClick();
               logout();
             }}
-            className="text-destructive focus:text-destructive focus:bg-foreground/5 cursor-pointer"
+            className="text-destructive focus:text-destructive focus:bg-hover cursor-pointer"
           >
             <LogOut className="mr-2 h-4 w-4" />
             Sign out
@@ -246,8 +246,8 @@ export function Sidebar() {
                       className={cn(
                         "flex items-center gap-3 pl-6 pr-2 py-2 text-sm transition-all duration-300 rounded-lg",
                         isActive
-                          ? "bg-black/4 dark:bg-white/12 backdrop-blur-xl font-medium shadow-[0_2px_8px_rgba(0,0,0,0.12),0_1px_2px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.4)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.3),0_1px_4px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.15)]"
-                          : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                          ? "bg-hover font-medium shadow-sm"
+                          : "text-muted-foreground hover:text-foreground hover:bg-hover"
                       )}
                     >
                       <span

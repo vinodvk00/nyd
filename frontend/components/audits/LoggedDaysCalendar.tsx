@@ -63,14 +63,11 @@ export function LoggedDaysCalendar({
 
   const getStatusColor = (hours: number) => {
     if (hours >= 20) {
-      // Complete
-      return "bg-green-100 border-green-400 text-green-800 dark:bg-green-900/30 dark:border-green-600 dark:text-green-300";
+      return "bg-success/20 border-success text-success";
     } else if (hours > 0) {
-      // Partial
-      return "bg-yellow-100 border-yellow-400 text-yellow-800 dark:bg-yellow-900/30 dark:border-yellow-600 dark:text-yellow-300";
+      return "bg-warning/20 border-warning text-warning-foreground";
     } else {
-      // Empty
-      return "bg-gray-50 border-gray-300 text-gray-500 dark:bg-gray-900/30 dark:border-gray-700 dark:text-gray-500";
+      return "bg-muted border-border text-muted-foreground";
     }
   };
 
@@ -86,7 +83,7 @@ export function LoggedDaysCalendar({
 
   if (allDays.length === 0) {
     return (
-      <div className="text-sm text-gray-500 dark:text-gray-400 italic">
+      <div className="text-sm text-muted-foreground italic">
         Invalid date range
       </div>
     );
@@ -95,10 +92,10 @@ export function LoggedDaysCalendar({
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+        <h3 className="text-sm font-semibold text-foreground">
           Your Progress
         </h3>
-        <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <span>✅ Complete (≥20h)</span>
           <span>⚠️ Partial (&lt;20h)</span>
           <span>⚫ Not logged</span>
@@ -119,11 +116,7 @@ export function LoggedDaysCalendar({
               className={`
                 p-3 rounded-lg border-2 transition-all hover:scale-105 hover:shadow-md
                 ${getStatusColor(hours)}
-                ${
-                  isToday
-                    ? "ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900"
-                    : ""
-                }
+                ${isToday ? "ring-2 ring-ring ring-offset-2 ring-offset-background" : ""}
               `}
               title={`${format(day, "EEEE, MMMM d, yyyy")}\n${hours.toFixed(
                 1
@@ -143,22 +136,20 @@ export function LoggedDaysCalendar({
       </div>
 
       {/* Summary stats */}
-      <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg grid grid-cols-3 gap-4 text-center">
+      <div className="mt-4 p-3 bg-muted rounded-lg grid grid-cols-3 gap-4 text-center">
         <div>
-          <p className="text-xs text-gray-600 dark:text-gray-400">Total Days</p>
+          <p className="text-xs text-muted-foreground">Total Days</p>
           <p className="text-lg font-bold">{allDays.length}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-600 dark:text-gray-400">
-            Days Logged
-          </p>
-          <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+          <p className="text-xs text-muted-foreground">Days Logged</p>
+          <p className="text-lg font-bold text-info">
             {Object.keys(dayStats).length}
           </p>
         </div>
         <div>
-          <p className="text-xs text-gray-600 dark:text-gray-400">Completed</p>
-          <p className="text-lg font-bold text-green-600 dark:text-green-400">
+          <p className="text-xs text-muted-foreground">Completed</p>
+          <p className="text-lg font-bold text-success">
             {Object.values(dayStats).filter((s) => s.hours >= 20).length}
           </p>
         </div>

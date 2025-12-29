@@ -253,7 +253,7 @@ export default function SettingsPage() {
               <CardDescription>
                 Connect your Toggl account to sync time entries.
                 {hasToken && savedWorkspaceId && (
-                  <span className="block mt-1 text-green-600">
+                  <span className="block mt-1 text-success">
                     Connected (Workspace: {savedWorkspaceId})
                   </span>
                 )}
@@ -326,7 +326,7 @@ export default function SettingsPage() {
                         href="https://track.toggl.com/profile"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-500 hover:underline"
+                        className="text-primary hover:underline"
                       >
                         Toggl Profile Settings
                       </a>

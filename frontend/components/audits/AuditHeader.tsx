@@ -43,26 +43,20 @@ export function AuditHeader({
   const endDate = new Date(audit.endDate);
   const daysRemaining = Math.max(0, Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
 
-  // Status badge variant
-  const statusVariant =
-    audit.status === 'active' ? 'default' :
-    audit.status === 'completed' ? 'secondary' :
-    'outline';
-
   const statusColor =
-    audit.status === 'active' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
-    audit.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
-    'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+    audit.status === 'active' ? 'bg-info/20 text-info border-info/30' :
+    audit.status === 'completed' ? 'bg-success/20 text-success border-success/30' :
+    'bg-muted text-muted-foreground';
 
   return (
     <div className="space-y-4 pb-6 border-b">
       {/* Title Row */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <BarChart2 className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+          <BarChart2 className="h-8 w-8 text-info" />
           <div>
             <h1 className="text-3xl font-bold">{audit.name}</h1>
-            <div className="flex items-center gap-2 mt-1 text-sm text-gray-600 dark:text-gray-400">
+            <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
               <span>
                 {new Date(audit.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                 {' - '}
@@ -137,7 +131,7 @@ export function AuditHeader({
               )}
 
               {onDelete && (
-                <DropdownMenuItem onClick={onDelete} className="text-red-600 dark:text-red-400">
+                <DropdownMenuItem onClick={onDelete} className="text-destructive">
                   <Trash2 className="mr-2 h-4 w-4" />
                   <span>Delete Audit</span>
                 </DropdownMenuItem>
@@ -150,10 +144,10 @@ export function AuditHeader({
       {/* Progress Bar */}
       <div className="space-y-2">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-600 dark:text-gray-400">
+          <span className="text-muted-foreground">
             {Math.round(completionPercentage)}% Complete
           </span>
-          <span className="text-gray-600 dark:text-gray-400">
+          <span className="text-muted-foreground">
             {hoursLogged.toFixed(1)} / {totalExpectedHours}h
           </span>
         </div>
@@ -162,8 +156,8 @@ export function AuditHeader({
 
       {/* Goal (if provided) */}
       {audit.goal && (
-        <div className="text-sm text-gray-600 dark:text-gray-400 italic">
-          <span className="font-medium text-gray-900 dark:text-gray-100">Goal:</span> {audit.goal}
+        <div className="text-sm text-muted-foreground italic">
+          <span className="font-medium text-foreground">Goal:</span> {audit.goal}
         </div>
       )}
     </div>
