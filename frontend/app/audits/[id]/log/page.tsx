@@ -14,7 +14,7 @@ import {
   getEntryStartTime,
   getEntryEndTime,
 } from "@/types/audit";
-import { GlobalHeader } from "@/components/navigation/GlobalHeader";
+import { useHeaderBreadcrumbs } from "@/contexts/header-context";
 
 const fetcher = async (url: string) => {
   const response = await fetch(url, {
@@ -86,6 +86,19 @@ export default function LogPage({
   const { data: templates } = useSWR<ActivityTemplate[]>(
     `${process.env.NEXT_PUBLIC_API_URL}/templates`,
     fetcher
+  );
+
+  useHeaderBreadcrumbs(
+    audit
+      ? [
+          { label: "Audits", href: "/audits" },
+          { label: audit.name, href: `/audits/${id}` },
+          { label: "Log Time" },
+        ]
+      : [
+          { label: "Audits", href: "/audits" },
+          { label: "Loading..." },
+        ]
   );
 
   const getSmartTemplates = (): ActivityTemplate[] => {
@@ -339,17 +352,9 @@ export default function LogPage({
 
   if (!audit)
     return (
-      <>
-        <GlobalHeader
-          breadcrumbItems={[
-            { label: "Audits", href: "/audits" },
-            { label: "Loading..." },
-          ]}
-        />
-        <div className="container mx-auto p-8">
-          <p>Loading...</p>
-        </div>
-      </>
+      <div className="container mx-auto p-6">
+        <p>Loading...</p>
+      </div>
     );
 
   const quadrant = getQuadrant(formData.isImportant, formData.isUrgent);
@@ -443,15 +448,7 @@ export default function LogPage({
   };
 
   return (
-    <>
-      <GlobalHeader
-        breadcrumbItems={[
-          { label: "Audits", href: "/audits" },
-          { label: audit.name, href: `/audits/${id}` },
-          { label: "Log Time" },
-        ]}
-      />
-      <div className="container mx-auto p-6 lg:p-8 max-w-7xl">
+    <div className="container mx-auto p-6 max-w-7xl">
         <div className="mb-6 pb-6 border-b">
           <div className="flex items-center gap-3 mb-4">
             <h1 className="text-2xl font-bold">{audit.name}</h1>
@@ -1243,6 +1240,5 @@ export default function LogPage({
           )}
         </div>
       </div>
-    </>
   );
 }

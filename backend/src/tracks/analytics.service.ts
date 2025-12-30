@@ -130,11 +130,37 @@ export class AnalyticsService {
       tracks.map((t) => t.projectName).filter(Boolean),
     );
 
+    const totalDays = Math.ceil(
+      (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+    ) + 1;
+
+    const hoursByDay = new Map<string, number>();
+    tracks.forEach((t) => {
+      const d = new Date(t.start);
+      const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      const hours = this.secondsToHours(t.duration || 0);
+      hoursByDay.set(key, (hoursByDay.get(key) || 0) + hours);
+    });
+
+    const loggedDays = hoursByDay.size;
+    const dailyHoursArray = Array.from(hoursByDay.values());
+    const peakDayHours = dailyHoursArray.length > 0 ? Math.max(...dailyHoursArray) : 0;
+    const lowDayHours = dailyHoursArray.length > 0 ? Math.min(...dailyHoursArray) : 0;
+
+    const avgHoursPerLoggedDay = loggedDays > 0 ? totalHours / loggedDays : 0;
+    const avgHoursPerDay = totalDays > 0 ? totalHours / totalDays : 0;
+
     return {
       totalHours: Math.round(totalHours * 100) / 100,
       totalSessions,
       averageSessionDuration: Math.round(averageSessionDuration * 100) / 100,
       activeProjects: uniqueProjects.size,
+      totalDays,
+      loggedDays,
+      avgHoursPerLoggedDay: Math.round(avgHoursPerLoggedDay * 100) / 100,
+      avgHoursPerDay: Math.round(avgHoursPerDay * 100) / 100,
+      peakDayHours: Math.round(peakDayHours * 100) / 100,
+      lowDayHours: Math.round(lowDayHours * 100) / 100,
       period: period || 'custom',
     };
   }

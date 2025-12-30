@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useState, useEffect } from "react"
+import { Suspense, useState, useEffect, useMemo } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { mutate } from "swr"
 import { SummaryCards } from "./components/summary-cards"
@@ -9,13 +9,14 @@ import { ProjectBreakdown } from "./components/project-breakdown"
 import { TopProjects } from "./components/top-projects"
 import { HourlyPattern } from "./components/hourly-pattern"
 import { GoalsManagement } from "./components/goals-management"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { PeriodSelector, SyncButton } from "./components/dashboard-header-actions"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Calendar } from "@/components/ui/calendar"
 import { syncFromToggl } from "@/lib/api"
 import { format } from "date-fns"
+import { useHeaderLeftActions, useHeaderRightActions } from "@/contexts/header-context"
 import type { TimePeriod, CustomDateRange } from "@/types/analytics"
 import type { DateRange } from "react-day-picker"
 
@@ -47,19 +48,6 @@ function DashboardContent() {
       return urlTab
     }
     return 'overview'
-  }
-
-  const getCustomRangeFromUrl = (): CustomDateRange => {
-    const startDateStr = searchParams.get('startDate')
-    const endDateStr = searchParams.get('endDate')
-
-    if (startDateStr && endDateStr) {
-      return {
-        startDate: new Date(startDateStr),
-        endDate: new Date(endDateStr)
-      }
-    }
-    return { startDate: null, endDate: null }
   }
 
   const period = getPeriod()
@@ -208,7 +196,6 @@ function DashboardContent() {
         { revalidate: true }
       )
 
-      // Also refresh process stats
       if (typeof window !== 'undefined' && (window as any).__refreshProcessStats) {
         (window as any).__refreshProcessStats()
       }
@@ -222,55 +209,24 @@ function DashboardContent() {
     }
   }
 
-  const getPeriodDisplayText = () => {
-    if (period === 'custom' && customRange.startDate && customRange.endDate) {
-      return (
-        <div className="flex items-center gap-2">
-          <span>📅</span>
-          <span>{format(customRange.startDate, 'MMM dd')} - {format(customRange.endDate, 'MMM dd')}</span>
-        </div>
-      )
-    }
-    return undefined
-  }
+  const leftActions = useMemo(() => (
+    <PeriodSelector
+      period={period}
+      customRange={customRange}
+      onPeriodChange={handlePeriodChange}
+      onOpenCustomDatePicker={openCustomDatePicker}
+    />
+  ), [period, customRange])
+
+  const rightActions = useMemo(() => (
+    <SyncButton syncing={syncing} onSync={handleSync} />
+  ), [syncing])
+
+  useHeaderLeftActions(leftActions)
+  useHeaderRightActions(rightActions)
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      {/* Header Controls */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center gap-3">
-          <div className="text-sm font-medium">Time Period:</div>
-          <Select value={period} onValueChange={handlePeriodChange}>
-            <SelectTrigger className="w-60">
-              <SelectValue placeholder="Select period">
-                {getPeriodDisplayText()}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="week">This Week</SelectItem>
-              <SelectItem value="month">This Month</SelectItem>
-              <SelectItem value="all">All Time</SelectItem>
-              <div className="h-px bg-border my-1" />
-              <div
-                className="relative flex w-full cursor-pointer items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none hover:bg-accent hover:text-accent-foreground"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  openCustomDatePicker()
-                }}
-              >
-                <span>📅</span>
-                <span>Custom Range...</span>
-              </div>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <Button onClick={handleSync} disabled={syncing}>
-          {syncing ? 'Syncing...' : 'Sync from Toggl'}
-        </Button>
-      </div>
-
       {/* Date Range Picker Dialog */}
       <Dialog open={showDatePicker} onOpenChange={setShowDatePicker}>
         <DialogContent className="sm:max-w-[700px]">

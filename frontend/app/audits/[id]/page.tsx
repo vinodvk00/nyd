@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import { toast } from 'sonner';
 import { Audit } from '@/types/audit';
-import { GlobalHeader } from '@/components/navigation/GlobalHeader';
+import { useHeaderBreadcrumbs } from '@/contexts/header-context';
 import { AuditHeader } from '@/components/audits/AuditHeader';
 import { ViewToggle } from '@/components/audits/ViewToggle';
 
@@ -37,6 +37,18 @@ export default function AuditPage({ params }: { params: Promise<{ id: string }> 
   const { data: audit, error, mutate } = useSWR<Audit>(
     `${process.env.NEXT_PUBLIC_API_URL}/audits/${id}`,
     fetcher
+  );
+
+  useHeaderBreadcrumbs(
+    audit
+      ? [
+          { label: 'Audits', href: '/audits' },
+          { label: audit.name }
+        ]
+      : [
+          { label: 'Audits', href: '/audits' },
+          { label: error ? 'Error' : 'Loading...' }
+        ]
   );
 
   const handleComplete = async () => {
@@ -116,66 +128,47 @@ export default function AuditPage({ params }: { params: Promise<{ id: string }> 
   };
 
   if (error) return (
-    <>
-      <GlobalHeader breadcrumbItems={[
-        { label: 'Audits', href: '/audits' },
-        { label: 'Audit' }
-      ]} />
-      <div className="container mx-auto p-8">
-        <p className="text-red-600">Failed to load audit</p>
-      </div>
-    </>
+    <div className="container mx-auto p-6">
+      <p className="text-red-600">Failed to load audit</p>
+    </div>
   );
 
   if (!audit) return (
-    <>
-      <GlobalHeader breadcrumbItems={[
-        { label: 'Audits', href: '/audits' },
-        { label: 'Loading...' }
-      ]} />
-      <div className="container mx-auto p-8">
-        <p>Loading...</p>
-      </div>
-    </>
+    <div className="container mx-auto p-6">
+      <p>Loading...</p>
+    </div>
   );
 
   return (
-    <>
-      <GlobalHeader breadcrumbItems={[
-        { label: 'Audits', href: '/audits' },
-        { label: audit.name }
-      ]} />
+    <div className="container mx-auto p-6">
+      <AuditHeader
+        audit={audit}
+        currentView={currentView}
+        onViewChange={setCurrentView}
+        onComplete={audit.status === 'active' ? handleComplete : undefined}
+        onAbandon={audit.status === 'active' ? handleAbandon : undefined}
+        onDelete={handleDelete}
+        onExport={handleExport}
+      />
 
-      <div className="container mx-auto p-6 lg:p-8">
-        <AuditHeader
-          audit={audit}
-          currentView={currentView}
-          onViewChange={setCurrentView}
-          onComplete={audit.status === 'active' ? handleComplete : undefined}
-          onAbandon={audit.status === 'active' ? handleAbandon : undefined}
-          onDelete={handleDelete}
-          onExport={handleExport}
-        />
-
-        <div className="mt-6">
-          <ViewToggle currentView={currentView} onViewChange={setCurrentView} />
-        </div>
-
-        <div className="mt-8">
-          {currentView === 'log' ? (
-            <div>
-              <p className="text-gray-500">Redirecting to log view...</p>
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">Analytics view coming soon!</p>
-              <p className="text-gray-400 text-sm mt-2">
-                Charts, insights, and productivity analysis will appear here
-              </p>
-            </div>
-          )}
-        </div>
+      <div className="mt-6">
+        <ViewToggle currentView={currentView} onViewChange={setCurrentView} />
       </div>
-    </>
+
+      <div className="mt-8">
+        {currentView === 'log' ? (
+          <div>
+            <p className="text-gray-500">Redirecting to log view...</p>
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">Analytics view coming soon!</p>
+            <p className="text-gray-400 text-sm mt-2">
+              Charts, insights, and productivity analysis will appear here
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

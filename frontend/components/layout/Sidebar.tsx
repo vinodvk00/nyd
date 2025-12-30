@@ -139,7 +139,7 @@ export function Sidebar() {
       defaultExpanded: true,
       items: [
         { label: 'Dashboard', href: '/dashboard', icon: BarChart3 },
-        { label: 'Projects', href: '/projects', icon: Folder },
+        // { label: 'Projects', href: '/projects', icon: Folder },
       ],
     },
   ];

@@ -1,20 +1,21 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SWRProvider } from "./swr-provider";
 import { AuthProvider } from "@/contexts/auth-context";
+import { HeaderProvider } from "@/contexts/header-context";
 import { ProtectedRoute } from "@/components/protected-route";
 import { ConditionalAppShell } from "@/components/layout/ConditionalAppShell";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: "--font-sans",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
 });
 
@@ -31,7 +32,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${plusJakarta.variable} ${jetbrainsMono.variable} font-sans antialiased`}
         suppressHydrationWarning
       >
         <ThemeProvider
@@ -41,13 +42,15 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
-            <ProtectedRoute>
-              <SWRProvider>
-                <ConditionalAppShell>
-                  {children}
-                </ConditionalAppShell>
-              </SWRProvider>
-            </ProtectedRoute>
+            <HeaderProvider>
+              <ProtectedRoute>
+                <SWRProvider>
+                  <ConditionalAppShell>
+                    {children}
+                  </ConditionalAppShell>
+                </SWRProvider>
+              </ProtectedRoute>
+            </HeaderProvider>
           </AuthProvider>
           <Toaster position="top-right" />
         </ThemeProvider>

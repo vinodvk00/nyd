@@ -20,6 +20,12 @@ export interface SummaryStats {
   totalSessions: number;
   averageSessionDuration: number;
   activeProjects: number;
+  totalDays: number;
+  loggedDays: number;
+  avgHoursPerLoggedDay: number;
+  avgHoursPerDay: number;
+  peakDayHours: number;
+  lowDayHours: number;
   period: TimePeriod;
 }
 

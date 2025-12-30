@@ -4,16 +4,30 @@ import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 
+const PUBLIC_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password', '/auth/verify'];
+const AUTH_ONLY_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password'];
+
+function isPublicRoute(pathname: string): boolean {
+  if (pathname === '/') return true;
+  return PUBLIC_ROUTES.some(route => pathname === route || pathname.startsWith(route + '/'));
+}
+
+function isAuthOnlyRoute(pathname: string): boolean {
+  return AUTH_ONLY_ROUTES.some(route => pathname === route || pathname.startsWith(route + '/'));
+}
+
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
-  const publicRoutes = ['/login', '/register', '/', '/forgot-password', '/reset-password', '/auth/verify'];
-
   useEffect(() => {
-    if (!loading && !isAuthenticated && !publicRoutes.includes(pathname)) {
-      router.push('/login');
+    if (!loading) {
+      if (!isAuthenticated && !isPublicRoute(pathname)) {
+        router.replace('/login');
+      } else if (isAuthenticated && isAuthOnlyRoute(pathname)) {
+        router.replace('/dashboard');
+      }
     }
   }, [isAuthenticated, loading, router, pathname]);
 
@@ -28,7 +42,11 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!isAuthenticated && !publicRoutes.includes(pathname)) {
+  if (!isAuthenticated && !isPublicRoute(pathname)) {
+    return null;
+  }
+
+  if (isAuthenticated && isAuthOnlyRoute(pathname)) {
     return null;
   }
 

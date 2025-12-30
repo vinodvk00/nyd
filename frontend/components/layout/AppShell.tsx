@@ -30,8 +30,8 @@ export function AppShell({ children }: AppShellProps) {
         {/* StatusBar - Fixed at top, starts after sidebar on desktop */}
         <StatusBar />
 
-        {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto">
+        {/* Main Content Area - scrollbar-gutter prevents layout shift */}
+        <main className="flex-1 overflow-y-auto" style={{ scrollbarGutter: 'stable' }}>
           {children}
         </main>
       </div>

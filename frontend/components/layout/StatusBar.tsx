@@ -1,90 +1,74 @@
 "use client"
 
 import { useState } from 'react';
-import { Menu, Plus, User, LogOut } from 'lucide-react';
-import { useAuth } from '@/contexts/auth-context';
+import { Menu, Plus } from 'lucide-react';
 import { useSidebar } from '@/contexts/sidebar-context';
+import { useHeader } from '@/contexts/header-context';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { QuickLogModal } from '@/components/modals/QuickLogModal';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { Breadcrumb } from '@/components/navigation/Breadcrumb';
 
 export function StatusBar() {
-  const { user, logout } = useAuth();
   const { toggle, isMobile } = useSidebar();
+  const { breadcrumbs, leftActions, rightActions } = useHeader();
   const [showQuickLog, setShowQuickLog] = useState(false);
+
+  const hasBreadcrumbs = breadcrumbs.length > 0;
+  const hasLeftActions = !!leftActions;
+  const hasRightActions = !!rightActions;
 
   return (
     <>
       <header className="sticky top-0 z-30 h-16 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-        <div className="flex h-full items-center justify-between px-4">
-          {/* Left: Hamburger (mobile only) */}
-          <div className="flex items-center gap-4">
+        <div className="flex h-full items-center px-6 gap-3">
+          {/* Left: Hamburger (mobile) + Breadcrumbs + Left Actions */}
+          <div className="flex items-center gap-3 min-w-0">
             {isMobile && (
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={toggle}
                 aria-label="Toggle sidebar"
+                className="flex-shrink-0"
               >
                 <Menu className="h-5 w-5" />
               </Button>
             )}
+            {hasBreadcrumbs && (
+              <Breadcrumb items={breadcrumbs} />
+            )}
+            {hasLeftActions && (
+              <>
+                {hasBreadcrumbs && <div className="h-6 w-px bg-border" />}
+                {leftActions}
+              </>
+            )}
           </div>
 
-          {/* Right: Quick Log + Theme Toggle + User Menu */}
-          <div className="flex items-center gap-2 ml-auto">
+          {/* Right: Page Right Actions + Global Actions */}
+          <div className="flex items-center gap-3 ml-auto flex-shrink-0">
+            {hasRightActions && (
+              <>
+                {rightActions}
+                <div className="h-6 w-px bg-border" />
+              </>
+            )}
+
             <Button
               onClick={() => setShowQuickLog(true)}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
               size="sm"
+              className="gap-1.5"
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Quick Log
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Quick Log</span>
             </Button>
 
-            {/* Theme Toggle */}
             <ThemeToggle />
-
-            {/* User Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="User menu">
-                  <User className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {user?.name || user?.email || 'User'}
-                    </p>
-                    {user?.email && (
-                      <p className="text-xs leading-none text-muted-foreground">
-                        {user.email}
-                      </p>
-                    )}
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={logout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </div>
       </header>
 
-      {/* Quick Log Modal */}
       <QuickLogModal open={showQuickLog} onOpenChange={setShowQuickLog} />
     </>
   );

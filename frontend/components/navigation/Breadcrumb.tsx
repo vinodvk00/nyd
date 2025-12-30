@@ -2,11 +2,7 @@
 
 import Link from 'next/link';
 import { ChevronRight, Home } from 'lucide-react';
-
-export interface BreadcrumbItem {
-  label: string;
-  href?: string;
-}
+import { BreadcrumbItem } from '@/contexts/header-context';
 
 interface BreadcrumbProps {
   items: BreadcrumbItem[];
