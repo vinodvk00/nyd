@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 
 const PUBLIC_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password', '/auth/verify'];
-const AUTH_ONLY_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password'];
+const AUTH_ONLY_ROUTES = ['/login', '/register', '/forgot-password'];
 
 function isPublicRoute(pathname: string): boolean {
   if (pathname === '/') return true;

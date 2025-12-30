@@ -62,7 +62,11 @@ async function fetchApi<T>(
 
         return await retryResponse.json();
       } else {
-        if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password', '/auth/verify'];
+        const isPublicPath = publicPaths.some(path =>
+          typeof window !== 'undefined' && window.location.pathname.startsWith(path)
+        );
+        if (typeof window !== 'undefined' && !isPublicPath) {
           window.location.href = '/login';
         }
         throw new Error('Authentication required');

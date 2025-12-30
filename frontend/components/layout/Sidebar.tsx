@@ -129,7 +129,7 @@ export function Sidebar() {
       defaultExpanded: true,
       items: [
         { label: 'Audits', href: '/audits', icon: FileText },
-        { label: 'Log Time', href: logTimeHref, icon: Clock },
+        ...(currentAudit ? [{ label: 'Log Time', href: logTimeHref, icon: Clock }] : []),
       ],
     },
     {
