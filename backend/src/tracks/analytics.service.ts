@@ -130,10 +130,6 @@ export class AnalyticsService {
       tracks.map((t) => t.projectName).filter(Boolean),
     );
 
-    const totalDays = Math.ceil(
-      (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
-    ) + 1;
-
     const hoursByDay = new Map<string, number>();
     tracks.forEach((t) => {
       const d = new Date(t.start);
@@ -146,6 +142,20 @@ export class AnalyticsService {
     const dailyHoursArray = Array.from(hoursByDay.values());
     const peakDayHours = dailyHoursArray.length > 0 ? Math.max(...dailyHoursArray) : 0;
     const lowDayHours = dailyHoursArray.length > 0 ? Math.min(...dailyHoursArray) : 0;
+
+    let totalDays: number;
+    if (tracks.length > 0 && period === TimePeriod.ALL) {
+      const trackDates = tracks.map(t => new Date(t.start).getTime());
+      const firstTrackDate = new Date(Math.min(...trackDates));
+      const lastTrackDate = new Date(Math.max(...trackDates));
+      totalDays = Math.max(1, Math.ceil(
+        (lastTrackDate.getTime() - firstTrackDate.getTime()) / (1000 * 60 * 60 * 24),
+      ) + 1);
+    } else {
+      totalDays = Math.max(1, Math.ceil(
+        (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+      ) + 1);
+    }
 
     const avgHoursPerLoggedDay = loggedDays > 0 ? totalHours / loggedDays : 0;
     const avgHoursPerDay = totalDays > 0 ? totalHours / totalDays : 0;
