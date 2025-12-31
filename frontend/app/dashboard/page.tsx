@@ -28,9 +28,22 @@ function DashboardContent() {
   const searchParams = useSearchParams()
   const [syncing, setSyncing] = useState(false)
   const [showDatePicker, setShowDatePicker] = useState(false)
-  const [customRange, setCustomRange] = useState<CustomDateRange>({
-    startDate: null,
-    endDate: null
+  const [customRange, setCustomRange] = useState<CustomDateRange>(() => {
+    
+    if (typeof window !== 'undefined') {
+      const savedPeriod = localStorage.getItem('lastPeriod')
+      if (savedPeriod === 'custom') {
+        const savedStartDate = localStorage.getItem('customStartDate')
+        const savedEndDate = localStorage.getItem('customEndDate')
+        if (savedStartDate && savedEndDate) {
+          return {
+            startDate: new Date(savedStartDate),
+            endDate: new Date(savedEndDate)
+          }
+        }
+      }
+    }
+    return { startDate: null, endDate: null }
   })
   const [tempRange, setTempRange] = useState<DateRange | undefined>(undefined)
 
@@ -39,6 +52,13 @@ function DashboardContent() {
     if (urlPeriod && VALID_PERIODS.includes(urlPeriod)) {
       return urlPeriod
     }
+
+    if (typeof window !== 'undefined') {
+      const savedPeriod = localStorage.getItem('lastPeriod') as TimePeriod
+      if (savedPeriod && VALID_PERIODS.includes(savedPeriod)) {
+        return savedPeriod
+      }
+    }
     return 'month'
   }
 
@@ -46,6 +66,13 @@ function DashboardContent() {
     const urlTab = searchParams.get('tab')
     if (urlTab && VALID_TABS.includes(urlTab)) {
       return urlTab
+    }
+
+    if (typeof window !== 'undefined') {
+      const savedTab = localStorage.getItem('lastTab')
+      if (savedTab && VALID_TABS.includes(savedTab)) {
+        return savedTab
+      }
     }
     return 'overview'
   }

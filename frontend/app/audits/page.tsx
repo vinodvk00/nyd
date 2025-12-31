@@ -100,6 +100,11 @@ export default function AuditsPage() {
           </p>
         </div>
 
+        <div className="flex items-center gap-2 px-4 py-3 text-sm bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 rounded-lg mb-6">
+          <span className="font-medium">Under Development</span>
+          <span className="text-amber-600/80 dark:text-amber-400/80">— This feature is being actively built. Some functionality may be limited.</span>
+        </div>
+
         <div className="flex justify-between items-center mb-8">
           <button
             onClick={() => setShowCreateForm(true)}

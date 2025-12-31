@@ -1,18 +1,16 @@
 "use client"
 
-import { useState } from 'react';
 import { Menu, Plus } from 'lucide-react';
 import { useSidebar } from '@/contexts/sidebar-context';
 import { useHeader } from '@/contexts/header-context';
 import { Button } from '@/components/ui/button';
-import { QuickLogModal } from '@/components/modals/QuickLogModal';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Breadcrumb } from '@/components/navigation/Breadcrumb';
+import { toast } from 'sonner';
 
 export function StatusBar() {
   const { toggle, isMobile } = useSidebar();
   const { breadcrumbs, leftActions, rightActions } = useHeader();
-  const [showQuickLog, setShowQuickLog] = useState(false);
 
   const hasBreadcrumbs = breadcrumbs.length > 0;
   const hasLeftActions = !!leftActions;
@@ -30,7 +28,7 @@ export function StatusBar() {
                 size="icon"
                 onClick={toggle}
                 aria-label="Toggle sidebar"
-                className="flex-shrink-0"
+                className="shrink-0"
               >
                 <Menu className="h-5 w-5" />
               </Button>
@@ -47,7 +45,7 @@ export function StatusBar() {
           </div>
 
           {/* Right: Page Right Actions + Global Actions */}
-          <div className="flex items-center gap-3 ml-auto flex-shrink-0">
+          <div className="flex items-center gap-3 ml-auto shrink-0">
             {hasRightActions && (
               <>
                 {rightActions}
@@ -56,8 +54,9 @@ export function StatusBar() {
             )}
 
             <Button
-              onClick={() => setShowQuickLog(true)}
+              onClick={() => toast.info('Quick Log coming soon!')}
               size="sm"
+              variant="outline"
               className="gap-1.5"
             >
               <Plus className="h-4 w-4" />
@@ -68,8 +67,6 @@ export function StatusBar() {
           </div>
         </div>
       </header>
-
-      <QuickLogModal open={showQuickLog} onOpenChange={setShowQuickLog} />
     </>
   );
 }
