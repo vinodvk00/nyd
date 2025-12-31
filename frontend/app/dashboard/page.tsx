@@ -253,10 +253,10 @@ function DashboardContent() {
   useHeaderRightActions(rightActions)
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto px-4 py-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Date Range Picker Dialog */}
       <Dialog open={showDatePicker} onOpenChange={setShowDatePicker}>
-        <DialogContent className="sm:max-w-[700px]">
+        <DialogContent className="max-w-[95vw] sm:max-w-[700px]">
           <DialogHeader>
             <DialogTitle>Select Custom Date Range</DialogTitle>
             <DialogDescription>
@@ -264,12 +264,12 @@ function DashboardContent() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex justify-center py-2">
+          <div className="flex justify-center py-2 overflow-x-auto">
             <Calendar
               mode="range"
               selected={tempRange}
               onSelect={setTempRange}
-              numberOfMonths={2}
+              numberOfMonths={typeof window !== 'undefined' && window.innerWidth < 640 ? 1 : 2}
               disabled={(date) => date > new Date()}
             />
           </div>

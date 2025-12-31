@@ -6,6 +6,7 @@ import { useHeader } from '@/contexts/header-context';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Breadcrumb } from '@/components/navigation/Breadcrumb';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 
 export function StatusBar() {
@@ -19,9 +20,9 @@ export function StatusBar() {
   return (
     <>
       <header className="sticky top-0 z-30 h-16 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-        <div className="flex h-full items-center px-6 gap-3">
+        <div className="flex h-full items-center px-3 sm:px-6 gap-2 sm:gap-3">
           {/* Left: Hamburger (mobile) + Breadcrumbs + Left Actions */}
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 overflow-hidden">
             {isMobile && (
               <Button
                 variant="ghost"
@@ -34,18 +35,20 @@ export function StatusBar() {
               </Button>
             )}
             {hasBreadcrumbs && (
-              <Breadcrumb items={breadcrumbs} />
+              <div className="min-w-0 overflow-hidden">
+                <Breadcrumb items={breadcrumbs} />
+              </div>
             )}
             {hasLeftActions && (
               <>
-                {hasBreadcrumbs && <div className="h-6 w-px bg-border" />}
-                {leftActions}
+                {hasBreadcrumbs && <div className="h-6 w-px bg-border shrink-0" />}
+                <div className="shrink-0">{leftActions}</div>
               </>
             )}
           </div>
 
           {/* Right: Page Right Actions + Global Actions */}
-          <div className="flex items-center gap-3 ml-auto shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 ml-auto shrink-0">
             {hasRightActions && (
               <>
                 {rightActions}
@@ -53,15 +56,24 @@ export function StatusBar() {
               </>
             )}
 
-            <Button
-              onClick={() => toast.info('Quick Log coming soon!')}
-              size="sm"
-              variant="outline"
-              className="gap-1.5"
-            >
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">Quick Log</span>
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => toast.info('Quick Log coming soon!')}
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span className="hidden sm:inline">Quick Log</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Quick log time entry</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
 
             <ThemeToggle />
           </div>

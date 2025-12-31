@@ -64,7 +64,7 @@ export default function ProjectDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
+      <div className="container mx-auto px-4 py-4 sm:p-6 space-y-6">
         {/* Header Skeleton */}
         <div className="space-y-4">
           <Skeleton className="h-8 w-32" />
@@ -103,7 +103,7 @@ export default function ProjectDetailPage() {
   // Error State
   if (error) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto px-4 py-4 sm:p-6">
         <Card className="max-w-md mx-auto mt-12">
           <CardContent className="pt-12 pb-12 text-center space-y-6">
             <div className="text-6xl">⚠️</div>
@@ -130,7 +130,7 @@ export default function ProjectDetailPage() {
   // Empty State
   if (!tracks || tracks.length === 0) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto px-4 py-4 sm:p-6">
         <Card className="max-w-2xl mx-auto mt-12">
           <CardContent className="pt-12 pb-12 text-center space-y-6">
             <div className="text-6xl">📊</div>
@@ -156,11 +156,11 @@ export default function ProjectDetailPage() {
 
   // Success State
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto px-4 py-4 sm:p-6 space-y-6">
       <ProjectDetailHeader projectName={projectName} tracks={tracks} />
 
       {/* Two Column Layout: Timeline (40%) + Insights (60%) */}
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(350px,40%)_1fr] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(300px,40%)_1fr] gap-4 sm:gap-6">
         {/* Left: Daily Activity Timeline - Compact 40% */}
         <DailyActivityList tracks={tracks} />
 

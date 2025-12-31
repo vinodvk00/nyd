@@ -128,19 +128,19 @@ export default function AuditPage({ params }: { params: Promise<{ id: string }> 
   };
 
   if (error) return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto px-4 py-4 sm:p-6">
       <p className="text-red-600">Failed to load audit</p>
     </div>
   );
 
   if (!audit) return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto px-4 py-4 sm:p-6">
       <p>Loading...</p>
     </div>
   );
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto px-4 py-4 sm:p-6">
       <AuditHeader
         audit={audit}
         currentView={currentView}

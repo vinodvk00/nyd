@@ -149,16 +149,16 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-2xl">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Settings</h1>
+    <div className="container mx-auto px-4 py-4 sm:p-6 max-w-2xl">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold">Settings</h1>
         <p className="text-muted-foreground">
           Manage your account and integrations
         </p>
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="preferences">Preferences</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>

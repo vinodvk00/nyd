@@ -92,9 +92,9 @@ export default function AuditsPage() {
   if (!audits) return <div className="p-8">Loading...</div>;
 
   return (
-    <div className="container mx-auto p-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Time Awareness Audits</h1>
+    <div className="container mx-auto px-4 py-4 sm:p-6">
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Time Awareness Audits</h1>
           <p className="text-muted-foreground">
             Track and analyze how you spend your time using the Eisenhower Matrix framework
           </p>
@@ -105,12 +105,12 @@ export default function AuditsPage() {
           <span className="text-amber-600/80 dark:text-amber-400/80">— This feature is being actively built. Some functionality may be limited.</span>
         </div>
 
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-6 sm:mb-8">
           <button
             onClick={() => setShowCreateForm(true)}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
+            className="px-3 py-2 text-sm sm:px-4 sm:text-base bg-primary text-primary-foreground rounded hover:bg-primary/90"
           >
-            Create Audit for Different Month
+            Create Audit
           </button>
         </div>
 
@@ -242,40 +242,40 @@ export default function AuditsPage() {
                   : ''
               }`}
             >
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <div className="flex items-center gap-3">
-                    <h3 className={`text-xl font-semibold ${isCurrentMonth ? 'text-info' : ''}`}>
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className={`text-lg sm:text-xl font-semibold ${isCurrentMonth ? 'text-info' : ''}`}>
                       {audit.name}
                     </h3>
                     {isCurrentMonth && (
                       <span className="text-xs px-2 py-1 rounded bg-info text-info-foreground">
-                        Current Month
+                        Current
                       </span>
                     )}
                     <button
                       onClick={() => handleEdit(audit)}
-                      className="text-sm px-3 py-1 text-muted-foreground hover:text-foreground border border-border rounded hover:bg-hover transition"
+                      className="text-xs sm:text-sm px-2 py-1 text-muted-foreground hover:text-foreground border border-border rounded hover:bg-hover transition"
                     >
-                      ✏️ Edit
+                      ✏️
                     </button>
                   </div>
-                  <p className={`text-sm mt-1 ${isCurrentMonth ? 'text-info/80' : 'text-muted-foreground'}`}>
-                    {new Date(audit.startDate).toLocaleDateString()} - {new Date(audit.endDate).toLocaleDateString()} ({audit.durationDays} days)
+                  <p className={`text-xs sm:text-sm mt-1 ${isCurrentMonth ? 'text-info/80' : 'text-muted-foreground'}`}>
+                    {new Date(audit.startDate).toLocaleDateString()} - {new Date(audit.endDate).toLocaleDateString()} ({audit.durationDays}d)
                   </p>
                   {audit.goal && (
-                    <p className="text-sm text-muted-foreground mt-2 italic">{audit.goal}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-2 italic line-clamp-2">{audit.goal}</p>
                   )}
                 </div>
                 <Link
                   href={`/audits/${audit.id}/log`}
-                  className={`px-6 py-3 rounded-lg font-semibold transition ${
+                  className={`shrink-0 px-4 py-2 sm:px-6 sm:py-3 rounded-lg font-semibold text-sm sm:text-base transition text-center ${
                     isCurrentMonth
                       ? 'bg-primary text-primary-foreground hover:bg-primary/90'
                       : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                   }`}
                 >
-                  {isCurrentMonth ? 'Log Time →' : 'View →'}
+                  {isCurrentMonth ? 'Log →' : 'View →'}
                 </Link>
               </div>
 

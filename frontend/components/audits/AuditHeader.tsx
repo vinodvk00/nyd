@@ -51,29 +51,29 @@ export function AuditHeader({
   return (
     <div className="space-y-4 pb-6 border-b">
       {/* Title Row */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3">
-          <BarChart2 className="h-8 w-8 text-info" />
-          <div>
-            <h1 className="text-3xl font-bold">{audit.name}</h1>
-            <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-              <span>
-                {new Date(audit.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-start sm:items-center gap-2 sm:gap-3 min-w-0">
+          <BarChart2 className="h-6 w-6 sm:h-8 sm:w-8 text-info shrink-0 mt-1 sm:mt-0" />
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-3xl font-bold break-words">{audit.name}</h1>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-xs sm:text-sm text-muted-foreground">
+              <span className="whitespace-nowrap">
+                {new Date(audit.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 {' - '}
                 {new Date(audit.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               </span>
               {audit.status === 'active' && daysRemaining > 0 && (
                 <>
-                  <span>•</span>
-                  <span>{daysRemaining} {daysRemaining === 1 ? 'day' : 'days'} remaining</span>
+                  <span className="hidden sm:inline">•</span>
+                  <span>{daysRemaining}d left</span>
                 </>
               )}
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Badge className={statusColor}>
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          <Badge className={`${statusColor} text-xs sm:text-sm`}>
             {audit.status.toUpperCase()}
           </Badge>
 

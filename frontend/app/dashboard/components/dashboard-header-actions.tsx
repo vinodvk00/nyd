@@ -1,8 +1,9 @@
 "use client"
 
-import { Calendar } from "lucide-react"
+import { Calendar, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { format } from "date-fns"
 import type { TimePeriod, CustomDateRange } from "@/types/analytics"
 
@@ -76,14 +77,24 @@ interface SyncButtonProps {
 
 export function SyncButton({ syncing, onSync }: SyncButtonProps) {
   return (
-    <Button
-      onClick={onSync}
-      disabled={syncing}
-      size="sm"
-      variant="outline"
-      className="min-w-[120px]"
-    >
-      {syncing ? 'Syncing...' : 'Sync from Toggl'}
-    </Button>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            onClick={onSync}
+            disabled={syncing}
+            size="sm"
+            variant="outline"
+            className="gap-1.5"
+          >
+            <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">{syncing ? 'Syncing...' : 'Sync'}</span>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Sync time entries from Toggl</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   )
 }
