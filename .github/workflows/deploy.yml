@@ -82,9 +82,21 @@ jobs:
 
             echo "🔄 Checking for changes..."
 
-            # Rebuild only if Dockerfile or package files changed
-            if git diff --name-only HEAD~1 | grep -qE "(Dockerfile|package.*json)"; then
-              echo "🏗️ Rebuilding containers..."
+            # Rebuild frontend if any frontend files changed (Next.js needs rebuild for code changes)
+            if git diff --name-only HEAD~1 | grep -qE "^frontend/"; then
+              echo "🏗️ Rebuilding frontend..."
+              docker compose build --no-cache frontend
+            fi
+
+            # Rebuild backend if backend files changed
+            if git diff --name-only HEAD~1 | grep -qE "^backend/"; then
+              echo "🏗️ Rebuilding backend..."
+              docker compose build --no-cache backend
+            fi
+
+            # Rebuild all if Dockerfile or docker-compose changed
+            if git diff --name-only HEAD~1 | grep -qE "(Dockerfile|docker-compose)"; then
+              echo "🏗️ Rebuilding all containers..."
               docker compose build --parallel
             fi
 
