@@ -82,22 +82,29 @@ jobs:
 
             echo "🔄 Checking for changes..."
 
-            # Rebuild frontend if any frontend files changed (Next.js needs rebuild for code changes)
-            if git diff --name-only HEAD~1 | grep -qE "^frontend/"; then
-              echo "🏗️ Rebuilding frontend..."
-              docker compose build --no-cache frontend
-            fi
+            # Check what changed
+            FRONTEND_CHANGED=$(git diff --name-only HEAD~1 | grep -qE "^frontend/" && echo "yes" || echo "no")
+            BACKEND_CHANGED=$(git diff --name-only HEAD~1 | grep -qE "^backend/" && echo "yes" || echo "no")
+            DOCKER_CHANGED=$(git diff --name-only HEAD~1 | grep -qE "(Dockerfile|docker-compose)" && echo "yes" || echo "no")
 
-            # Rebuild backend if backend files changed
-            if git diff --name-only HEAD~1 | grep -qE "^backend/"; then
-              echo "🏗️ Rebuilding backend..."
-              docker compose build --no-cache backend
-            fi
-
-            # Rebuild all if Dockerfile or docker-compose changed
-            if git diff --name-only HEAD~1 | grep -qE "(Dockerfile|docker-compose)"; then
-              echo "🏗️ Rebuilding all containers..."
+            # Rebuild with cache (fast) - only rebuilds changed layers
+            if [ "$DOCKER_CHANGED" = "yes" ]; then
+              echo "🏗️ Docker config changed - rebuilding all..."
               docker compose build --parallel
+            else
+              if [ "$FRONTEND_CHANGED" = "yes" ]; then
+                echo "🏗️ Rebuilding frontend (with cache)..."
+                docker compose build frontend
+              fi
+              if [ "$BACKEND_CHANGED" = "yes" ]; then
+                echo "🏗️ Rebuilding backend (with cache)..."
+                docker compose build backend
+              fi
+            fi
+
+            # Skip restart if nothing changed
+            if [ "$FRONTEND_CHANGED" = "no" ] && [ "$BACKEND_CHANGED" = "no" ] && [ "$DOCKER_CHANGED" = "no" ]; then
+              echo "⏭️ No app changes detected, skipping rebuild..."
             fi
 
             echo "🚀 Restarting services..."

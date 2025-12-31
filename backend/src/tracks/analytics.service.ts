@@ -97,6 +97,7 @@ export class AnalyticsService {
     period?: TimePeriod,
     startDateStr?: string,
     endDateStr?: string,
+    timezone: string = 'UTC',
   ) {
     let startDate: Date, endDate: Date;
 
@@ -178,7 +179,7 @@ export class AnalyticsService {
   /**
    * Get time breakdown by project
    */
-  async getProjectBreakdown(userId: number, startDate?: string, endDate?: string) {
+  async getProjectBreakdown(userId: number, startDate?: string, endDate?: string, timezone: string = 'UTC') {
     const { startDate: start, endDate: end } = this.validateDateRange(
       startDate,
       endDate,
@@ -223,6 +224,7 @@ export class AnalyticsService {
     startDate?: string,
     endDate?: string,
     groupBy: GroupBy = GroupBy.DAY,
+    timezone: string = 'UTC',
   ) {
     const { startDate: start, endDate: end } = this.validateDateRange(
       startDate,
@@ -244,7 +246,7 @@ export class AnalyticsService {
 
     const result = await this.trackRepository
       .createQueryBuilder('track')
-      .select(`TO_CHAR(track.start, '${dateFormat}')`, 'date')
+      .select(`TO_CHAR(track.start AT TIME ZONE 'UTC' AT TIME ZONE '${timezone}', '${dateFormat}')`, 'date')
       .addSelect('SUM(track.duration)', 'totalSeconds')
       .addSelect('COUNT(track.id)', 'sessionCount')
       .where('track.start BETWEEN :start AND :end', { start, end })
@@ -265,7 +267,7 @@ export class AnalyticsService {
   /**
    * Get hourly activity pattern
    */
-  async getHourlyPattern(userId: number, startDate?: string, endDate?: string) {
+  async getHourlyPattern(userId: number, startDate?: string, endDate?: string, timezone: string = 'UTC') {
     const { startDate: start, endDate: end } = this.validateDateRange(
       startDate,
       endDate,
@@ -273,7 +275,7 @@ export class AnalyticsService {
 
     const result = await this.trackRepository
       .createQueryBuilder('track')
-      .select('EXTRACT(HOUR FROM track.start)', 'hour')
+      .select(`EXTRACT(HOUR FROM track.start AT TIME ZONE 'UTC' AT TIME ZONE '${timezone}')`, 'hour')
       .addSelect('SUM(track.duration)', 'totalSeconds')
       .addSelect('COUNT(track.id)', 'sessionCount')
       .where('track.start BETWEEN :start AND :end', { start, end })
@@ -300,6 +302,7 @@ export class AnalyticsService {
     period?: TimePeriod,
     startDateStr?: string,
     endDateStr?: string,
+    timezone: string = 'UTC',
   ) {
     let currentStart: Date, currentEnd: Date;
 
@@ -365,6 +368,7 @@ export class AnalyticsService {
     period?: TimePeriod,
     startDateStr?: string,
     endDateStr?: string,
+    timezone: string = 'UTC',
   ) {
     let startDate: Date, endDate: Date;
 

@@ -19,6 +19,13 @@ import type {
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 /**
+ * Get user's timezone (IANA format like 'Asia/Kolkata')
+ */
+export function getUserTimezone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
+/**
  * Base fetch wrapper with error handling and cookie-based auth
  */
 async function fetchApi<T>(
@@ -126,57 +133,61 @@ function buildQueryString(params: Record<string, string | number | undefined>): 
 
 /**
  * Get Summary Statistics
- * GET /tracks/stats/summary?period={period}&startDate={date}&endDate={date}
+ * GET /tracks/stats/summary?period={period}&startDate={date}&endDate={date}&timezone={tz}
  */
 export async function fetchSummaryStats(
   period?: TimePeriod,
   startDate?: string,
   endDate?: string
 ): Promise<SummaryStats> {
-  const query = buildQueryString({ period, startDate, endDate });
+  const timezone = getUserTimezone();
+  const query = buildQueryString({ period, startDate, endDate, timezone });
   return fetchApi<SummaryStats>(`/tracks/stats/summary${query}`);
 }
 
 /**
  * Get Project Breakdown
- * GET /tracks/stats/by-project?startDate={date}&endDate={date}
+ * GET /tracks/stats/by-project?startDate={date}&endDate={date}&timezone={tz}
  */
 export async function fetchProjectBreakdown(
   startDate?: string,
   endDate?: string
 ): Promise<ProjectBreakdown> {
-  const query = buildQueryString({ startDate, endDate });
+  const timezone = getUserTimezone();
+  const query = buildQueryString({ startDate, endDate, timezone });
   return fetchApi<ProjectBreakdown>(`/tracks/stats/by-project${query}`);
 }
 
 /**
  * Get Activity Data (Daily/Weekly/Monthly)
- * GET /tracks/stats/by-date?startDate={date}&endDate={date}&groupBy={groupBy}
+ * GET /tracks/stats/by-date?startDate={date}&endDate={date}&groupBy={groupBy}&timezone={tz}
  */
 export async function fetchActivityData(
   startDate?: string,
   endDate?: string,
   groupBy: GroupBy = 'day'
 ): Promise<ActivityData> {
-  const query = buildQueryString({ startDate, endDate, groupBy });
+  const timezone = getUserTimezone();
+  const query = buildQueryString({ startDate, endDate, groupBy, timezone });
   return fetchApi<ActivityData>(`/tracks/stats/by-date${query}`);
 }
 
 /**
  * Get Hourly Pattern
- * GET /tracks/stats/hourly-pattern?startDate={date}&endDate={date}
+ * GET /tracks/stats/hourly-pattern?startDate={date}&endDate={date}&timezone={tz}
  */
 export async function fetchHourlyPattern(
   startDate?: string,
   endDate?: string
 ): Promise<HourlyPattern> {
-  const query = buildQueryString({ startDate, endDate });
+  const timezone = getUserTimezone();
+  const query = buildQueryString({ startDate, endDate, timezone });
   return fetchApi<HourlyPattern>(`/tracks/stats/hourly-pattern${query}`);
 }
 
 /**
  * Get Trends
- * GET /tracks/stats/trends?metric={metric}&period={period}&startDate={date}&endDate={date}
+ * GET /tracks/stats/trends?metric={metric}&period={period}&startDate={date}&endDate={date}&timezone={tz}
  */
 export async function fetchTrends(
   metric: TrendMetric = 'hours',
@@ -184,13 +195,14 @@ export async function fetchTrends(
   startDate?: string,
   endDate?: string
 ): Promise<Trend> {
-  const query = buildQueryString({ metric, period, startDate, endDate });
+  const timezone = getUserTimezone();
+  const query = buildQueryString({ metric, period, startDate, endDate, timezone });
   return fetchApi<Trend>(`/tracks/stats/trends${query}`);
 }
 
 /**
  * Get Top Projects
- * GET /tracks/stats/top-projects?limit={limit}&period={period}&startDate={date}&endDate={date}
+ * GET /tracks/stats/top-projects?limit={limit}&period={period}&startDate={date}&endDate={date}&timezone={tz}
  */
 export async function fetchTopProjects(
   limit: number = 5,
@@ -198,7 +210,8 @@ export async function fetchTopProjects(
   startDate?: string,
   endDate?: string
 ): Promise<TopProjects> {
-  const query = buildQueryString({ limit, period, startDate, endDate });
+  const timezone = getUserTimezone();
+  const query = buildQueryString({ limit, period, startDate, endDate, timezone });
   return fetchApi<TopProjects>(`/tracks/stats/top-projects${query}`);
 }
 

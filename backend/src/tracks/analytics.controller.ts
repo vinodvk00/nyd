@@ -24,7 +24,7 @@ export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 
   /**
-   * GET /tracks/stats/summary?period=today|week|month|all&startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+   * GET /tracks/stats/summary?period=today|week|month|all&startDate=YYYY-MM-DD&endDate=YYYY-MM-DD&timezone=IANA
    * Get summary statistics for a given period or custom date range
    */
   @Get('summary')
@@ -33,14 +33,17 @@ export class AnalyticsController {
     @Query('period') period?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
+    @Query('timezone') timezone?: string,
   ) {
     try {
       const validPeriod = period ? this.validatePeriod(period) : undefined;
+      const validTimezone = this.validateTimezone(timezone);
       return await this.analyticsService.getSummaryStats(
         req.user.userId,
         validPeriod,
         startDate,
         endDate,
+        validTimezone,
       );
     } catch (error) {
       throw new HttpException(
@@ -57,7 +60,7 @@ export class AnalyticsController {
   }
 
   /**
-   * GET /tracks/stats/by-project?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+   * GET /tracks/stats/by-project?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD&timezone=IANA
    * Get time breakdown by project
    */
   @Get('by-project')
@@ -65,12 +68,15 @@ export class AnalyticsController {
     @Request() req,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
+    @Query('timezone') timezone?: string,
   ) {
     try {
+      const validTimezone = this.validateTimezone(timezone);
       return await this.analyticsService.getProjectBreakdown(
         req.user.userId,
         startDate,
         endDate,
+        validTimezone,
       );
     } catch (error) {
       throw new HttpException(
@@ -87,7 +93,7 @@ export class AnalyticsController {
   }
 
   /**
-   * GET /tracks/stats/by-date?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD&groupBy=day|week|month
+   * GET /tracks/stats/by-date?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD&groupBy=day|week|month&timezone=IANA
    * Get activity grouped by date
    */
   @Get('by-date')
@@ -96,14 +102,17 @@ export class AnalyticsController {
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('groupBy') groupBy?: string,
+    @Query('timezone') timezone?: string,
   ) {
     try {
       const validGroupBy = this.validateGroupBy(groupBy);
+      const validTimezone = this.validateTimezone(timezone);
       return await this.analyticsService.getActivityByDate(
         req.user.userId,
         startDate,
         endDate,
         validGroupBy,
+        validTimezone,
       );
     } catch (error) {
       throw new HttpException(
@@ -120,7 +129,7 @@ export class AnalyticsController {
   }
 
   /**
-   * GET /tracks/stats/hourly-pattern?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+   * GET /tracks/stats/hourly-pattern?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD&timezone=IANA
    * Get hourly activity pattern
    */
   @Get('hourly-pattern')
@@ -128,9 +137,11 @@ export class AnalyticsController {
     @Request() req,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
+    @Query('timezone') timezone?: string,
   ) {
     try {
-      return await this.analyticsService.getHourlyPattern(req.user.userId, startDate, endDate);
+      const validTimezone = this.validateTimezone(timezone);
+      return await this.analyticsService.getHourlyPattern(req.user.userId, startDate, endDate, validTimezone);
     } catch (error) {
       throw new HttpException(
         {
@@ -146,7 +157,7 @@ export class AnalyticsController {
   }
 
   /**
-   * GET /tracks/stats/trends?metric=hours|sessions&period=week|month&startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+   * GET /tracks/stats/trends?metric=hours|sessions&period=week|month&startDate=YYYY-MM-DD&endDate=YYYY-MM-DD&timezone=IANA
    * Get trends compared to previous period or custom date range
    */
   @Get('trends')
@@ -156,16 +167,19 @@ export class AnalyticsController {
     @Query('period') period?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
+    @Query('timezone') timezone?: string,
   ) {
     try {
       const validMetric = this.validateMetric(metric);
       const validPeriod = period ? this.validatePeriod(period) : undefined;
+      const validTimezone = this.validateTimezone(timezone);
       return await this.analyticsService.getTrends(
         req.user.userId,
         validMetric,
         validPeriod,
         startDate,
         endDate,
+        validTimezone,
       );
     } catch (error) {
       throw new HttpException(
@@ -182,7 +196,7 @@ export class AnalyticsController {
   }
 
   /**
-   * GET /tracks/stats/top-projects?limit=5&period=week|month|all&startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+   * GET /tracks/stats/top-projects?limit=5&period=week|month|all&startDate=YYYY-MM-DD&endDate=YYYY-MM-DD&timezone=IANA
    * Get top projects by time spent for a period or custom date range
    */
   @Get('top-projects')
@@ -192,6 +206,7 @@ export class AnalyticsController {
     @Query('period') period?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
+    @Query('timezone') timezone?: string,
   ) {
     try {
       this.logger.log(
@@ -199,12 +214,14 @@ export class AnalyticsController {
       );
       const validLimit = limit ? parseInt(limit, 10) : 5;
       const validPeriod = period ? this.validatePeriod(period) : undefined;
+      const validTimezone = this.validateTimezone(timezone);
       const result = await this.analyticsService.getTopProjects(
         req.user.userId,
         validLimit,
         validPeriod,
         startDate,
         endDate,
+        validTimezone,
       );
       this.logger.log(
         `Successfully fetched ${result.topProjects.length} top projects`,
@@ -257,5 +274,14 @@ export class AnalyticsController {
       return metric as TrendMetric;
     }
     return TrendMetric.HOURS;
+  }
+
+  private validateTimezone(timezone?: string): string {
+    if (!timezone) return 'UTC';
+
+    if (timezone.includes('/') || timezone === 'UTC') {
+      return timezone;
+    }
+    return 'UTC';
   }
 }
